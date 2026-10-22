@@ -1,0 +1,39 @@
+# NailFit 标签体系（推荐空间的坐标系）
+# 修改本文件即可扩展维度，无需改动代码。
+version: 1
+
+features:
+  nail_bed_ratio: [short_wide, standard, slender]
+  nail_shape: [round, square, oval, almond, squoval]
+  length: [very_short, short, mid, long]
+  ita_band: [light, mid, deep]
+  warmth: [cool, neutral, warm]
+  hand_type: [slim, standard, fleshy]
+  scene: [commute, date, wedding, festival, cool, y2k]
+
+styles:
+  color_family: [nude_pink, true_red, berry, orange_brown, blue_green, mono, metal, glitter]
+  tone: [cool, neutral, warm]
+  value: [light, mid, deep]
+  saturation: [low, mid, high]
+  style: [solid, french, gradient, cat_eye, chrome, drawing, rhinestone, checker, marble, mixed, glitter]
+  length_fit: [short, mid, long]
+
+# 甲长排序，用于兼容性判断（款式所需 > 用户实际 → 不可行）
+length_order: [very_short, short, mid, long]
+
+scoring:
+  weight_rule: 0.45
+  weight_semantic: 0.30
+  weight_scene: 0.15
+  weight_novelty: 0.10
+  base: 1.0
+
+diversity:
+  min_hue_gap: 30
+  forbid_same_color_family: true
+
+tiers:
+  safe: [commute]
+  highlight: [date, wedding]
+  bold: [festival, cool, y2k]

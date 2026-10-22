@@ -1,0 +1,24 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 本地配置与数据
+.env
+chroma_db/
+*.log
+
+# 款式图片默认随仓库提交（演示用缩略图）。
+# 若图片没有授权，取消下面两行注释即可排除。
+# static/styles/*.jpg
+# static/styles/*.png

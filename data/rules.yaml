@@ -1,0 +1,102 @@
+# NailFit 匹配规则
+# 语义：when 全部命中 → 规则生效；prefer 加权；block 直接排除（硬过滤）
+# 改规则只需改本文件，不需要动代码。
+version: 1
+
+rules:
+  - id: bed_short_wide
+    when: { nail_bed_ratio: short_wide }
+    prefer: { nail_shape: [almond, oval], style: [french] }
+    block: { nail_shape: [round] }
+    reason: 甲床偏短宽，杏仁或椭圆甲型能拉长视觉比例
+    weight: 1.0
+
+  - id: bed_slender
+    when: { nail_bed_ratio: slender }
+    prefer: { nail_shape: [squoval, oval], style: [solid] }
+    reason: 甲床修长，可以驾驭方圆形与大面积纯色
+    weight: 0.8
+
+  - id: length_very_short
+    when: { length: very_short }
+    prefer: { style: [solid], length_fit: [short] }
+    block: { style: [drawing, rhinestone, cat_eye] }
+    reason: 甲长极短，纯色与法式边最稳妥，复杂工艺做不出效果
+    weight: 1.0
+
+  - id: length_short
+    when: { length: short }
+    prefer: { length_fit: [short] }
+    block: { style: [drawing, rhinestone] }
+    reason: 短甲优先选短甲友好款式，手绘与贴钻需要留长
+    weight: 0.8
+
+  - id: length_long
+    when: { length: long }
+    prefer: { style: [cat_eye, gradient, rhinestone] }
+    reason: 甲长充足，猫眼、渐变、贴钻这类需要发挥空间的款式更出彩
+    weight: 0.6
+
+  - id: skin_light_cool
+    when: { ita_band: light, warmth: cool }
+    prefer: { color_family: [berry, true_red], tone: [cool] }
+    block: { color_family: [orange_brown] }
+    reason: 冷调浅肤适合莓果、蓝调红，橘棕容易显脏
+    weight: 1.0
+
+  - id: skin_light_warm
+    when: { ita_band: light, warmth: warm }
+    prefer: { color_family: [nude_pink, orange_brown], tone: [warm] }
+    block: { color_family: [blue_green] }
+    reason: 暖调浅肤配奶茶、橘棕能提气色，冷绿的对比会让手显暗
+    weight: 1.0
+
+  - id: skin_deep
+    when: { ita_band: deep }
+    prefer: { color_family: [true_red, metal, glitter], saturation: [high] }
+    block: { color_family: [nude_pink] }
+    reason: 深肤色适合高饱和与金属亮片，浅裸色容易显灰、缺少对比
+    weight: 1.2
+
+  - id: hand_fleshy
+    when: { hand_type: fleshy }
+    prefer: { nail_shape: [squoval, almond], value: [mid, deep] }
+    block: { nail_shape: [round] }
+    reason: 手型偏肉感，方圆形配中深色能收窄视觉，圆头短甲会放大肉感
+    weight: 0.9
+
+  - id: hand_slim
+    when: { hand_type: slim }
+    prefer: { nail_shape: [almond, oval], style: [cat_eye, gradient] }
+    reason: 手指纤细，长杏仁甲配猫眼/渐变能强化线条感
+    weight: 0.7
+
+  - id: scene_commute
+    when: { scene: commute }
+    prefer: { style: [solid, french], color_family: [nude_pink, mono], value: [light, mid] }
+    reason: 通勤场景以低饱和纯色与法式为主，不挑工作环境
+    weight: 0.7
+
+  - id: scene_date
+    when: { scene: date }
+    prefer: { style: [gradient, cat_eye], color_family: [berry, true_red] }
+    reason: 约会场景适合带光泽感的渐变与猫眼，近距离更出效果
+    weight: 0.7
+
+  - id: scene_wedding
+    when: { scene: wedding }
+    prefer: { style: [french, marble], color_family: [nude_pink, mono], value: [light] }
+    reason: 婚礼场景以浅色法式与大理石纹为主，配合礼服不抢戏
+    weight: 0.7
+
+  - id: scene_festival
+    when: { scene: festival }
+    prefer: { style: [glitter, rhinestone], color_family: [true_red, metal] }
+    reason: 节日场景可以上亮片与贴钻，氛围感优先于日常耐看
+    weight: 0.7
+
+  - id: scene_y2k
+    when: { scene: y2k }
+    prefer: { style: [checker, chrome], color_family: [metal, blue_green] }
+    reason: Y2K 风格靠镜面、格纹与撞色出效果
+    weight: 0.7
