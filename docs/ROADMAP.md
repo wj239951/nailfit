@@ -50,7 +50,7 @@
 
 | ID | 任务 | 产出 | 验收标准 | 状态 |
 |---|---|---|---|---|
-| M17 | 解释层：LLM 生成理由 + 模板降级 | `core/explainer.py`、`scripts/check_llm.py`、README | LLM 3/3 条理由通过清洗与契约校验；无 Key/超时自动降级并在 `meta.explainer` 标注 | 🔄 代码 + 10 个单测 + 本地 Ollama 联调完成（小模型 2–3/3 条通过，含缺失 id 自动重试）；**待提供 DeepSeek Key 做云端实测** |
+| M17 | 解释层：LLM 生成理由 + 模板降级 | `core/explainer.py`、`scripts/check_llm.py`、README | LLM 3/3 条理由通过清洗与契约校验；无 Key/超时自动降级并在 `meta.explainer` 标注 | ✅ 已完成（`653c2dc`；云端 `deepseek-chat` 实测 3/3、无降级；本地 Ollama 小模型 2–3/3 用于验证降级路径；测试 140 个） |
 | M18 | 评测脚本 | `eval/run.py` | 批量跑 cases → 合理率/多样性/稳定性 | ⬜ 未开始 |
 | M19 | 评测集 | `eval/cases.json` | 30 张手照 + 人工期望 | ⬜ 未开始（已有 6 张标准手照可作种子） |
 
