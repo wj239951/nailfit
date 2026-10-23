@@ -45,6 +45,24 @@ def test_build_features_rejects_unknown_field() -> None:
         build_features({"nail_bed_ratio": "standard", "length": "short", "unknown": "x"})
 
 
+def test_build_features_passes_through_ita_degrees() -> None:
+    """手照识别会带回 ita_degrees（派生数值），不能被当成未知字段。"""
+    features = build_features({"nail_shape": "square", "ita_degrees": 58.3})
+    assert features.nail_shape == "square"
+    assert features.ita_degrees == pytest.approx(58.3)
+
+
+def test_generate_accepts_vision_payload() -> None:
+    """模拟 features_from_image 的返回结构（枚举字段 + scene + ita_degrees）。"""
+    payload = generate(
+        {"nail_bed_ratio": "standard", "nail_shape": "round", "length": "short",
+         "ita_band": "light", "warmth": "warm", "hand_type": "standard",
+         "scene": "commute", "ita_degrees": 64.4},
+        use_llm=False,
+    )
+    assert len(payload["recommendations"]) == 3
+
+
 def test_tier_label() -> None:
     assert tier_label("safe") == "稳妥款"
     assert tier_label("bold") == "大胆款"

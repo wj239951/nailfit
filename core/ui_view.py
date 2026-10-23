@@ -48,12 +48,17 @@ def image_file(image: str | None) -> Path | None:
 
 
 def build_features(selection: dict[str, str]) -> HandFeatures:
-    """把前端下拉框的取值组装成 HandFeatures 并校验（与后端同一套校验）。"""
+    """把前端下拉框的取值组装成 HandFeatures 并校验（与后端同一套校验）。
+
+    `ita_degrees` 是视觉层派生出来的数值字段（不在 taxonomy 的枚举里），允许透传，
+    手照识别后「用这组特征推荐」时不会因为它被当成未知字段而失败。
+    """
     enums = load_taxonomy()["features"]
-    unknown = sorted(set(selection) - set(enums))
+    extra_fields = {"ita_degrees"}
+    unknown = sorted(set(selection) - set(enums) - extra_fields)
     if unknown:
         raise FeatureError("未知特征字段：" + "、".join(unknown))
-    payload: dict[str, str] = {}
+    payload: dict[str, object] = {}
     for field, allowed in enums.items():
         value = selection.get(field)
         if not value:
@@ -61,6 +66,9 @@ def build_features(selection: dict[str, str]) -> HandFeatures:
         if value not in allowed:
             raise ValueError(f"{field}={value!r} 不在允许取值中")
         payload[field] = value
+    ita = selection.get("ita_degrees")
+    if ita not in (None, ""):
+        payload["ita_degrees"] = float(ita)
     return HandFeatures.from_dict(payload)
 
 
