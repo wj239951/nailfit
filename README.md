@@ -45,7 +45,7 @@ nailfit/
 ├── data/
 │   ├── taxonomy.yaml        # 特征枚举 + 打分权重 + 多样性约束
 │   ├── rules.yaml           # 匹配规则（改规则不改代码）
-│   └── styles.sample.json   # 款式库样例（10 条，替换成真实款式）
+│   └── styles.sample.json   # 款式库样例（13 条，替换成真实款式）
 ├── core/
 │   ├── data.py              # YAML / JSON 加载
 │   ├── features.py          # HandFeatures 数据契约 + 校验
@@ -53,6 +53,8 @@ nailfit/
 │   ├── landmarks.py         # 21 关键点 → 几何特征（启发式）
 │   ├── rules.py             # 规则引擎：when / prefer / block
 │   ├── selector.py          # 排序 + 三档 + 多样性
+│   ├── styles.py            # 款式库校验（字段 / 枚举 / 唯一性 / 图片）
+│   ├── labels.py            # 中文标签（特征名 / 甲型 / 场景）
 │   ├── retriever.py         # 可选语义加权（bge-m3）
 │   ├── explainer.py         # LLM 生成理由（无 key 时模板降级）
 │   └── validator.py         # 输出契约校验
@@ -61,10 +63,14 @@ nailfit/
 │   ├── routes.py            # /api/recommend /api/styles
 │   └── schemas.py           # 请求/响应模型
 ├── scripts/
-│   └── demo.py              # 命令行跑通全链路（无需起服务）
-├── tests/                   # pytest：规则 / 选择 / 校验
+│   ├── demo.py              # 命令行跑通全链路（无需起服务）
+│   ├── manual.py            # 手工录入 7 项手部特征 → 三张推荐卡
+│   └── validate_styles.py   # 款式库数据校验
+├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库
 ├── static/styles/           # 款式图片（按 style id 命名）
-└── docs/design.md           # 设计说明
+└── docs/
+    ├── design.md            # 设计说明
+    └── ROADMAP.md           # 剩余任务清单（M1–M23）
 ```
 
 ## 快速开始
@@ -87,6 +93,78 @@ pytest -q
 uvicorn api.main:app --reload --port 8000
 # Swagger: http://127.0.0.1:8000/docs
 ```
+
+---
+
+## 演示：手工录入版（还不接视觉时怎么跑）
+
+手照提取还没做，先用 7 项手工填写的特征跑完整推荐链路：
+
+```bash
+# 交互式录入：逐项选择，回车取默认值
+python scripts/manual.py
+
+# 直接给参数：一条命令出三张卡
+python scripts/manual.py --bed short_wide --length short --ita light --warmth warm --hand fleshy --scene commute
+
+# 场景预设：short_wide_warm / slender_cool / deep_festival / long_y2k
+python scripts/manual.py --scenario deep_festival
+
+# JSON 输出（接前端 / 评测脚本）
+python scripts/manual.py --yes --json
+```
+
+输出示例：
+
+```
+==============================================================
+NailFit · 推荐结果
+==============================================================
+特征：甲床偏短宽、椭圆、短甲、肤色偏浅、暖调、手型偏肉感、通勤
+候选池：4 款可用 / 9 款被排除
+
+[1] 奶茶裸粉 · 细法式  （safe 档，匹配度 0.92）
+    图：static/styles/s001.jpg
+    理由：甲床偏短宽，杏仁或椭圆甲型能拉长视觉比例；短甲优先选短甲友好款式，手绘与贴钻需要留长。
+    命中规则：bed_short_wide / length_short / skin_light_warm
+
+[2] 短甲猫眼 · 浆果  （highlight 档，匹配度 0.64）
+    ...
+
+避雷：
+  - 「浆果紫 · 猫眼」该款式需要 mid 甲长，与当前甲长不匹配
+```
+
+参数说明：
+
+| 参数 | 取值 | 说明 |
+|---|---|---|
+| `--bed` | `short_wide` / `standard` / `slender` | 甲床比例 |
+| `--shape` | `round` / `square` / `oval` / `almond` / `squoval` | 当前甲型 |
+| `--length` | `very_short` / `short` / `mid` / `long` | 当前甲长 |
+| `--ita` | `light` / `mid` / `deep` | 肤色深浅 |
+| `--warmth` | `warm` / `neutral` / `cool` | 肤色冷暖 |
+| `--hand` | `slim` / `standard` / `fleshy` | 手型 |
+| `--scene` | `commute` / `date` / `wedding` / `festival` / `cool` / `y2k` | 场景 |
+
+其他参数：`--free-text "想要温柔显白"`（自由描述，参与语义加权）、`--llm`（有 Key 时用云端生成理由）、`--json`（机器可读）、`--interactive`（强制逐项填写）、`--yes`（用默认值，不反问）。
+
+## 款式库校验
+
+给 `data/styles.json` 打标前/后都跑一遍，避免脏数据进推荐链路：
+
+```bash
+# 字段完整性 + 枚举合法性 + id 唯一性
+python scripts/validate_styles.py
+
+# 额外检查图片是否存在（打图阶段用）
+python scripts/validate_styles.py --check-images
+
+# 校验真实款式库（默认读 data/styles.sample.json）
+python scripts/validate_styles.py --styles data/styles.json
+```
+
+---
 
 ## API
 
