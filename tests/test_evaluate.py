@@ -124,8 +124,10 @@ def test_evaluate_case_returns_expected_fields():
 
 
 def test_summary_separates_known_gaps():
-    cases = [CASES[0], next(case for case in CASES if case.get("known_gap"))]
-    report = evalrun.evaluate(cases, STYLES, TAXONOMY, runs=1)
+    gap_case = dict(CASES[0])
+    gap_case["id"] = "c-synthetic-gap"
+    gap_case["known_gap"] = "synthetic known gap for test"
+    report = evalrun.evaluate([CASES[0], gap_case], STYLES, TAXONOMY, runs=1)
     summary = report["summary"]
     assert summary["cases"] == 2
     assert summary["known_gap_cases"] == 1

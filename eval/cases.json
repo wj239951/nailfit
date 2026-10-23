@@ -15,10 +15,24 @@
         "scene": "commute"
       },
       "expect": {
-        "tone": ["warm", "neutral"],
-        "value": ["light", "mid"],
-        "shape": ["round", "squoval", "square", "oval", "almond"],
-        "forbid_families": ["blue_green"]
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "shape": [
+          "round",
+          "squoval",
+          "square",
+          "oval",
+          "almond"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
       }
     },
     {
@@ -34,9 +48,18 @@
         "scene": "festival"
       },
       "expect": {
-        "tone": ["warm", "neutral"],
-        "value": ["deep", "mid"],
-        "shape": ["almond", "oval"]
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "deep",
+          "mid"
+        ],
+        "shape": [
+          "almond",
+          "oval"
+        ]
       }
     },
     {
@@ -52,11 +75,19 @@
         "scene": "commute"
       },
       "expect": {
-        "tone": ["cool", "neutral"],
-        "value": ["light", "mid"],
-        "shape": ["square", "squoval"]
-      },
-      "known_gap": "规则层没有「冷调浅肤」的颜色约束：仍把暖色裸粉 s001 排在 safe 档（M18 实测，待补 rules）"
+        "tone": [
+          "cool",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "shape": [
+          "square",
+          "squoval"
+        ]
+      }
     },
     {
       "id": "c04",
@@ -71,11 +102,19 @@
         "scene": "y2k"
       },
       "expect": {
-        "tone": ["cool", "neutral"],
-        "value": ["mid", "deep"],
-        "shape": ["almond", "oval"]
-      },
-      "known_gap": "Y2K/冷调场景没有压制暖色渐变：safe 档仍是橘棕 s004，金属/镜面类没进主推（M18 实测，待补 rules）"
+        "tone": [
+          "cool",
+          "neutral"
+        ],
+        "value": [
+          "mid",
+          "deep"
+        ],
+        "shape": [
+          "almond",
+          "oval"
+        ]
+      }
     },
     {
       "id": "c05",
@@ -90,9 +129,19 @@
         "scene": "date"
       },
       "expect": {
-        "tone": ["warm", "neutral"],
-        "value": ["light", "mid"],
-        "shape": ["round", "oval", "squoval"]
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "shape": [
+          "round",
+          "oval",
+          "squoval"
+        ]
       }
     },
     {
@@ -108,10 +157,15 @@
         "scene": "commute"
       },
       "expect": {
-        "tone": ["cool", "neutral"],
-        "value": ["deep", "mid"]
-      },
-      "known_gap": "深肤没有 value 下限约束：safe 档推了浅色 s007 极简法式，深肤应优先 mid/deep（M18 实测，待补 rules）"
+        "tone": [
+          "cool",
+          "neutral"
+        ],
+        "value": [
+          "deep",
+          "mid"
+        ]
+      }
     },
     {
       "id": "c07",
@@ -126,8 +180,14 @@
         "scene": "wedding"
       },
       "expect": {
-        "tone": ["warm", "neutral"],
-        "value": ["light", "mid"]
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ]
       }
     },
     {
@@ -143,8 +203,14 @@
         "scene": "festival"
       },
       "expect": {
-        "tone": ["neutral", "warm"],
-        "value": ["light", "mid"]
+        "tone": [
+          "neutral",
+          "warm"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ]
       }
     }
   ]

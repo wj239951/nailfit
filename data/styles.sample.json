@@ -209,6 +209,38 @@
       "scene": ["date", "cool"],
       "hue": 315,
       "tags": ["猫眼", "气质"]
+    },
+    {
+      "id": "s014",
+      "name": "冷灰蓝 · 纯色",
+      "image": "static/styles/s014.jpg",
+      "shape": ["square", "squoval"],
+      "color_family": "blue_green",
+      "tone": "cool",
+      "value": "light",
+      "saturation": "low",
+      "style": "solid",
+      "length_fit": "short",
+      "nail_bed_fit": ["standard", "slender", "short_wide"],
+      "scene": ["commute"],
+      "hue": 210,
+      "tags": ["通勤", "冷调", "显白"]
+    },
+    {
+      "id": "s015",
+      "name": "深莓 · 猫眼",
+      "image": "static/styles/s015.jpg",
+      "shape": ["oval", "almond"],
+      "color_family": "berry",
+      "tone": "cool",
+      "value": "deep",
+      "saturation": "mid",
+      "style": "cat_eye",
+      "length_fit": "mid",
+      "nail_bed_fit": ["standard", "slender"],
+      "scene": ["commute", "date"],
+      "hue": 315,
+      "tags": ["猫眼", "气质", "显白"]
     }
   ]
 }

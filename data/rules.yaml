@@ -39,10 +39,17 @@ rules:
 
   - id: skin_light_cool
     when: { ita_band: light, warmth: cool }
-    prefer: { color_family: [berry, true_red], tone: [cool] }
+    prefer: { color_family: [berry, true_red], tone: [cool, neutral] }
     block: { color_family: [orange_brown] }
-    reason: 冷调浅肤适合莓果、蓝调红，橘棕容易显脏
-    weight: 1.0
+    reason: 冷调浅肤适合莓果、蓝调红等冷色，暖裸色容易显黄显脏
+    weight: 2.0
+
+  - id: skin_mid_cool
+    when: { ita_band: mid, warmth: cool }
+    prefer: { tone: [cool, neutral], value: [mid, deep] }
+    block: { color_family: [orange_brown] }
+    reason: 中性偏冷肤色适合冷调中深色，橘棕与浅暖色容易衬托得没气色
+    weight: 1.4
 
   - id: skin_light_warm
     when: { ita_band: light, warmth: warm }
@@ -51,12 +58,26 @@ rules:
     reason: 暖调浅肤配奶茶、橘棕能提气色，冷绿的对比会让手显暗
     weight: 1.0
 
-  - id: skin_deep
-    when: { ita_band: deep }
-    prefer: { color_family: [true_red, metal, glitter], saturation: [high] }
+  - id: skin_deep_warm
+    when: { ita_band: deep, warmth: warm }
+    prefer: { color_family: [orange_brown, true_red, glitter, metal], saturation: [high, mid], value: [mid, deep] }
     block: { color_family: [nude_pink] }
-    reason: 深肤色适合高饱和与金属亮片，浅裸色容易显灰、缺少对比
-    weight: 1.2
+    reason: 深肤暖调适合暖棕、正红、亮片与中深色，浅裸色容易显灰、缺少对比
+    weight: 1.4
+
+  - id: skin_deep_cool
+    when: { ita_band: deep, warmth: cool }
+    prefer: { color_family: [berry, metal, true_red], tone: [cool, neutral], value: [mid, deep] }
+    block: { color_family: [orange_brown, nude_pink] }
+    reason: 深肤冷调适合莓果、金属与蓝调红，橘棕和浅裸色容易显脏
+    weight: 1.4
+
+  - id: skin_deep_neutral
+    when: { ita_band: deep, warmth: neutral }
+    prefer: { color_family: [mono, berry, metal, true_red], value: [mid, deep] }
+    block: { color_family: [orange_brown] }
+    reason: 深肤中性调适合黑灰、莓果与金属的中深色，橘棕容易显脏
+    weight: 1.3
 
   - id: hand_fleshy
     when: { hand_type: fleshy }
