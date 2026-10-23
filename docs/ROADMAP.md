@@ -1,7 +1,7 @@
 # NailFit 剩余任务清单（Roadmap）
 
-> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `10f640e`（M5 说明 + M6 工具 + 43 张演示图 + M7 演示库）→ `88e2126`（M14 Streamlit 前端）→ `b3a881c`（M8 视觉层 + M9 接进主流程）→ `f610669`（自然拍摄角度适配）→ `175f96b`（M12 校准）；**本次改动：M17 解释层（LLM 写理由 + 契约清洗 + 缺失 id 自动重试 + 模板降级 + 自检脚本）**，测试 140 个全绿
-> 已完成：项目骨架、规则引擎（15 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**；**M14 Streamlit 单页（`app/streamlit_app.py`）完成**；**M8 视觉层 + M9 主流程接入完成**（`core/vision.py`、`scripts/vision_demo.py`、`/api/vision/extract`、`/api/recommend/from-image`、前端「手照识别」）；**M12 第一版校准完成**（6 张标准手照，依据见 README「M12 第一版校准」）；**M17 解释层代码完成**（LLM 理由 + 模板降级 + 单测，测试 140 个）
+> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `10f640e`（M5 说明 + M6 工具 + 43 张演示图 + M7 演示库）→ `88e2126`（M14 Streamlit 前端）→ `b3a881c`（M8 视觉层 + M9 接进主流程）→ `f610669`（自然拍摄角度适配）→ `175f96b`（M12 校准）→ `653c2dc`（M17 解释层）→ `48badc4`（M17 云端实测文档）；**本次改动：M18 评测脚本 + 8 条种子用例（`eval/run.py`、`eval/cases.json`、`tests/test_evaluate.py`）**，测试 153 个全绿，评测契约 100%、合理性 100%（3 条已知缺口单独统计）
+> 已完成：项目骨架、规则引擎（15 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**；**M14 Streamlit 单页（`app/streamlit_app.py`）完成**；**M8 视觉层 + M9 主流程接入完成**（`core/vision.py`、`scripts/vision_demo.py`、`/api/vision/extract`、`/api/recommend/from-image`、前端「手照识别」）；**M12 第一版校准完成**（6 张标准手照，依据见 README「M12 第一版校准」）；**M17 解释层完成**（LLM 理由 + 模板降级 + 云端 3/3 实测，测试 140 个）；**M18 评测脚本完成**（契约/合理性/多样性/稳定性/抖动，8 条用例，测试 153 个）
 > 原则：**规则决定推荐什么，模型只决定怎么说；不生成图片，只从款式库挑图。**
 
 ---
@@ -51,8 +51,8 @@
 | ID | 任务 | 产出 | 验收标准 | 状态 |
 |---|---|---|---|---|
 | M17 | 解释层：LLM 生成理由 + 模板降级 | `core/explainer.py`、`scripts/check_llm.py`、README | LLM 3/3 条理由通过清洗与契约校验；无 Key/超时自动降级并在 `meta.explainer` 标注 | ✅ 已完成（`653c2dc`；云端 `deepseek-chat` 实测 3/3、无降级；本地 Ollama 小模型 2–3/3 用于验证降级路径；测试 140 个） |
-| M18 | 评测脚本 | `eval/run.py` | 批量跑 cases → 合理率/多样性/稳定性 | ⬜ 未开始 |
-| M19 | 评测集 | `eval/cases.json` | 30 张手照 + 人工期望 | ⬜ 未开始（已有 6 张标准手照可作种子） |
+| M18 | 评测脚本 | `eval/run.py`、`eval/cases.json` | 批量跑 cases → 合理率/多样性/稳定性 | ✅ 已完成（8 条种子用例；契约 100%、合理性 100%、多样性 100%、top-1 稳定 100%、单特征抖动 10%；测出 3 条规则层已知缺口并单独统计；测试 153 个） |
+| M19 | 评测集 | `eval/cases.json` | 30 张手照 + 人工期望 | ⬜ 未开始（已有 8 条手工特征用例 + 6 张标准手照可作种子） |
 
 ## 阶段六：求职包装（负责人：你为主，~1 天）
 

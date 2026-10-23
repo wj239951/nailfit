@@ -41,4 +41,8 @@ _tmp_pytest/
 tests/_scratch_*/
 tests/_autotag_tmp/
 tests/_img_tmp/
+tests/_tmp_eval/
 _probe_*.py
+
+# 评测报告（每次运行重新生成，不入库）
+eval/reports/

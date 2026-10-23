@@ -75,7 +75,11 @@ nailfit/
 │   ├── vision_demo.py       # 手照 → 手部特征（M8，需 mediapipe）
 │   ├── autotag.py           # 图片 → 结构化款式标签，生成演示款式库
 │   └── check_llm.py         # 解释层自检（M17：云端 Key / 本地 Ollama 联调）
-├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层
+├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层 / 评测
+├── eval/
+│   ├── run.py               # 推荐质量评测（M18：契约 / 合理性 / 多样性 / 稳定性）
+│   ├── cases.json           # 评测用例（M18 种子 8 条，M19 扩到 30 张手照）
+│   └── reports/             # 每次运行的 JSON 报告（gitignore）
 ├── models/                  # MediaPipe 模型缓存（gitignore，首次使用时自动下载）
 ├── raw_hands/               # 本地手照素材（gitignore）
 ├── static/styles/           # 款式图片（按 style id 命名）
@@ -105,6 +109,9 @@ python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
 
 # 3. 跑测试
 pytest -q
+
+# 3.1 推荐质量评测（M18：契约 / 合理性 / 多样性 / 稳定性，报告写到 eval/reports/）
+python eval/run.py
 
 # 4. 启动 API
 uvicorn api.main:app --reload --port 8000
@@ -206,6 +213,33 @@ python scripts/manual.py --llm   # 手工录入版同样支持
 > 奶茶裸粉配细法式在短甲上留白少，不会截断甲面，椭圆或方圆形修甲能顺着偏短宽的甲床拉出纵向比例；暖调浅肤上裸粉不发灰，通勤也干净不抢眼。
 
 Key 放在系统环境变量 `DEEPSEEK_API_KEY`（或项目根目录 `.env`）均可，`check_llm.py` / API / 前端共用同一份配置。
+
+## 推荐质量评测（M18）
+
+推荐得「对不对」不能只靠肉眼抽查。`eval/run.py` 把一批人工标注的用例跑一遍，量化五个维度：
+
+```bash
+python eval/run.py                      # 跑 eval/cases.json，3 次重复
+python eval/run.py --llm --llm-cases 3  # 额外量解释层（LLM 有效条数 / 降级 / 耗时）
+python eval/run.py --strict             # 合理性低于阈值返回非 0（CI 用）
+python eval/run.py --styles data/styles.demo.json   # 换 43 条演示库跑
+```
+
+| 维度 | 口径 | 当前结果（样例库 13 条，2026-10-23） |
+| --- | --- | --- |
+| 契约 contract | 3 条推荐、id 存在、色系不重复、理由非空且 ≤160 字、档位合法 | 100% |
+| 合理性 fit | safe 档（主推荐）的 tone / value / shape 与人工期望一致；禁止项对所有档位生效 | 100%（3 条已知缺口不计入） |
+| 多样性 diversity | 色相圆形间隔 ≥ `min_hue_gap`、三档覆盖 | 100%，三档覆盖均值 3.00 |
+| 稳定性 stability | 重复运行 top-1 一致率；单特征抖动一档时 top-1 变化率 | 稳定 100%，抖动 10% |
+| 解释层（可选） | LLM 有效条数 / 降级例数 / 平均耗时 | `--llm` 时输出 |
+
+用例文件 `eval/cases.json` 每条 = 7 项手部特征 + 人工期望（tone / value / shape / 禁止项）。评测还暴露出 3 条**规则层已知缺口**（用 `known_gap` 标注、单独统计，不计入通过率）：
+
+1. 冷调浅肤仍然把暖色裸粉（s001）排在 safe 档——规则层没有「冷调」颜色约束；
+2. Y2K/冷调场景没有压制暖色渐变（s004 进了主推），金属/镜面类没被提上来；
+3. 深肤没有 value 下限，safe 档推了浅色极简法式（s007）。
+
+这些是下一步补 `data/rules.yaml` 的输入，M19 会用真实手照把用例扩到约 30 条。
 
 ## 网页前端（Streamlit，M14）
 

@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "note": "M18 评测用例（手工期望，基于规则语义与款式目测）。M19 会扩充到约 30 张真实手照 + 图片字段。expect 里：tone/value/shape/length_fit 是软硬约束（硬：tone/value/shape/禁止项；scene 只算命中率）。",
+  "cases": [
+    {
+      "id": "c01",
+      "name": "浅暖·短方甲·通勤",
+      "features": {
+        "nail_bed_ratio": "standard",
+        "nail_shape": "squoval",
+        "length": "short",
+        "ita_band": "light",
+        "warmth": "warm",
+        "hand_type": "standard",
+        "scene": "commute"
+      },
+      "expect": {
+        "tone": ["warm", "neutral"],
+        "value": ["light", "mid"],
+        "shape": ["round", "squoval", "square", "oval", "almond"],
+        "forbid_families": ["blue_green"]
+      }
+    },
+    {
+      "id": "c02",
+      "name": "深肤暖调·长杏仁·节日",
+      "features": {
+        "nail_bed_ratio": "standard",
+        "nail_shape": "almond",
+        "length": "long",
+        "ita_band": "deep",
+        "warmth": "warm",
+        "hand_type": "fleshy",
+        "scene": "festival"
+      },
+      "expect": {
+        "tone": ["warm", "neutral"],
+        "value": ["deep", "mid"],
+        "shape": ["almond", "oval"]
+      }
+    },
+    {
+      "id": "c03",
+      "name": "冷调·短方甲·通勤",
+      "features": {
+        "nail_bed_ratio": "standard",
+        "nail_shape": "square",
+        "length": "short",
+        "ita_band": "light",
+        "warmth": "cool",
+        "hand_type": "slim",
+        "scene": "commute"
+      },
+      "expect": {
+        "tone": ["cool", "neutral"],
+        "value": ["light", "mid"],
+        "shape": ["square", "squoval"]
+      },
+      "known_gap": "规则层没有「冷调浅肤」的颜色约束：仍把暖色裸粉 s001 排在 safe 档（M18 实测，待补 rules）"
+    },
+    {
+      "id": "c04",
+      "name": "冷调·长杏仁·Y2K",
+      "features": {
+        "nail_bed_ratio": "slender",
+        "nail_shape": "almond",
+        "length": "long",
+        "ita_band": "mid",
+        "warmth": "cool",
+        "hand_type": "standard",
+        "scene": "y2k"
+      },
+      "expect": {
+        "tone": ["cool", "neutral"],
+        "value": ["mid", "deep"],
+        "shape": ["almond", "oval"]
+      },
+      "known_gap": "Y2K/冷调场景没有压制暖色渐变：safe 档仍是橘棕 s004，金属/镜面类没进主推（M18 实测，待补 rules）"
+    },
+    {
+      "id": "c05",
+      "name": "浅暖·短圆甲·约会",
+      "features": {
+        "nail_bed_ratio": "short_wide",
+        "nail_shape": "round",
+        "length": "short",
+        "ita_band": "light",
+        "warmth": "warm",
+        "hand_type": "fleshy",
+        "scene": "date"
+      },
+      "expect": {
+        "tone": ["warm", "neutral"],
+        "value": ["light", "mid"],
+        "shape": ["round", "oval", "squoval"]
+      }
+    },
+    {
+      "id": "c06",
+      "name": "深肤冷调·中长椭圆·通勤",
+      "features": {
+        "nail_bed_ratio": "standard",
+        "nail_shape": "oval",
+        "length": "mid",
+        "ita_band": "deep",
+        "warmth": "cool",
+        "hand_type": "standard",
+        "scene": "commute"
+      },
+      "expect": {
+        "tone": ["cool", "neutral"],
+        "value": ["deep", "mid"]
+      },
+      "known_gap": "深肤没有 value 下限约束：safe 档推了浅色 s007 极简法式，深肤应优先 mid/deep（M18 实测，待补 rules）"
+    },
+    {
+      "id": "c07",
+      "name": "浅暖·短方甲·婚礼",
+      "features": {
+        "nail_bed_ratio": "short_wide",
+        "nail_shape": "squoval",
+        "length": "short",
+        "ita_band": "light",
+        "warmth": "warm",
+        "hand_type": "fleshy",
+        "scene": "wedding"
+      },
+      "expect": {
+        "tone": ["warm", "neutral"],
+        "value": ["light", "mid"]
+      }
+    },
+    {
+      "id": "c08",
+      "name": "中性·长杏仁·大胆",
+      "features": {
+        "nail_bed_ratio": "slender",
+        "nail_shape": "almond",
+        "length": "long",
+        "ita_band": "light",
+        "warmth": "neutral",
+        "hand_type": "slim",
+        "scene": "festival"
+      },
+      "expect": {
+        "tone": ["neutral", "warm"],
+        "value": ["light", "mid"]
+      }
+    }
+  ]
+}
