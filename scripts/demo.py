@@ -70,6 +70,22 @@ SCENARIOS: dict[str, dict] = {
 }
 
 
+def _print_explainer(payload: dict) -> None:
+    """说明这一轮理由来自大模型还是模板，以及降级原因（M17）。"""
+    meta = (payload.get("meta") or {}).get("explainer") or {}
+    mode = meta.get("mode")
+    model = meta.get("model")
+    if mode == "llm":
+        if meta.get("degraded"):
+            print(f"理由：大模型生成（{model}，{meta.get('llm_cards', 0)}/3 条，其余为模板补位）")
+        else:
+            print(f"理由：大模型生成（{model}）")
+    elif mode == "template":
+        print("理由：模板（未配置 DEEPSEEK_API_KEY，或没有加 --llm）")
+    if meta.get("error"):
+        print(f"降级原因：{meta['error']}")
+
+
 def _print_human(payload: dict) -> None:
     features = payload["features"]
     print("=" * 62)
@@ -80,7 +96,9 @@ def _print_human(payload: dict) -> None:
         "手型={hand_type}  场景={scene}".format(**features)
     )
     print(f"候选池：{payload['meta']['candidates_considered']} 款可用，"
-          f"{payload['meta']['excluded']} 款被规则排除\n")
+          f"{payload['meta']['excluded']} 款被规则排除")
+    _print_explainer(payload)
+    print()
     for idx, card in enumerate(payload["recommendations"], start=1):
         print(f"[{idx}] {card['name']}  （{card['tier']} 档，匹配度 {card['match_score']:.2f}）")
         print(f"    图：{card['image']}")

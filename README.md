@@ -73,7 +73,8 @@ nailfit/
 │   ├── validate_styles.py   # 款式库数据校验
 │   ├── prepare_images.py    # 款式图批量裁切 / 缩放 / 压缩（≤300KB）
 │   ├── vision_demo.py       # 手照 → 手部特征（M8，需 mediapipe）
-│   └── autotag.py           # 图片 → 结构化款式标签，生成演示款式库
+│   ├── autotag.py           # 图片 → 结构化款式标签，生成演示款式库
+│   └── check_llm.py         # 解释层自检（M17：云端 Key / 本地 Ollama 联调）
 ├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层
 ├── models/                  # MediaPipe 模型缓存（gitignore，首次使用时自动下载）
 ├── raw_hands/               # 本地手照素材（gitignore）
@@ -116,6 +117,10 @@ streamlit run app/streamlit_app.py
 
 # 6. 手照识别（可选，需要 requirements-vision.txt；模型会在首次使用时自动下载）
 python scripts/vision_demo.py --dir raw_hands
+
+# 7. 大模型解释层（可选，M17）：把 .env 里的 DEEPSEEK_API_KEY 填好后
+python scripts/check_llm.py     # 自检：3/3 条理由由模型生成且通过契约校验
+python scripts/demo.py --llm    # 命令行用模型写理由（不配 Key 自动降级模板）
 ```
 
 ---
@@ -172,6 +177,29 @@ NailFit · 推荐结果
 | `--scene` | `commute` / `date` / `wedding` / `festival` / `cool` / `y2k` | 场景 |
 
 其他参数：`--free-text "想要温柔显白"`（自由描述，参与语义加权）、`--llm`（有 Key 时用云端生成理由）、`--json`（机器可读）、`--interactive`（强制逐项填写）、`--yes`（用默认值，不反问）。
+
+## 解释层（M17）：规则选款式，模型写理由
+
+推荐结果始终由规则引擎决定，大模型只负责把「为什么适合」写得更像人话。模型不可用时自动降级为模板理由，**推荐结果本身不受影响**。
+
+```bash
+# .env（参考 .env.example）：DEEPSEEK_API_KEY=sk-xxx
+python scripts/check_llm.py      # 自检：读 .env → 调云端 → 打印 3 条理由与校验结果（退出码 0 = 可用）
+python scripts/demo.py --llm     # 命令行：加 --llm 即开启
+python scripts/manual.py --llm   # 手工录入版同样支持
+```
+
+- **触发条件**：`use_llm=true` 且配置了 `DEEPSEEK_API_KEY`。API 请求的 `use_llm` 字段默认 `true`，前端开关默认关闭（避免误调用）。
+- **输出清洗（防幻觉）**：`style_id` 必须逐字来自候选；`reason` 非空且 ≤160 字（超长截断）；`caution` ≤60 字；`avoid` ≤2 条、每条 ≤60 字。缺条目/调用失败 → **逐条回退模板**。
+- **自动补一次**：第一次返回不齐时，把缺失的 `style_id` 反馈给模型重试一次；第二次仍失败就用第一次已通过校验的部分。
+- **状态可追溯**：响应里 `meta.explainer = {mode, model, degraded, llm_cards, error}`；命令行会打印「理由：大模型生成（deepseek-chat，3/3 条）」或降级原因。
+- **本地联调（不花云端 Key）**：Ollama 的 OpenAI 兼容端点也能跑整条链路：
+
+  ```bash
+  python scripts/check_llm.py --base-url http://127.0.0.1:11434/v1 --model deepseek-r1:7b
+  ```
+
+  小模型质量有限（实测 2–3/3 条通过校验），只用于验证接入与降级逻辑；正式演示用云端 DeepSeek。
 
 ## 网页前端（Streamlit，M14）
 
@@ -327,6 +355,7 @@ python scripts/vision_demo.py --dir raw_hands --json out_hands.json
 | 手照没检测到手 / 模型缺失 | `✗ ...`，退出码 2 | `422`，`手照识别失败: ...` |
 | 手照是随手角度（握拳/半握） | 只输出肤色，甲面字段标「不可靠」，前端下拉补选即可 | `422`，`手照信息不足: ...`，提示补选或手工补齐 |
 | 输出契约失败（模型编了不存在的款式） | `✗ 推荐失败：...` | `502`，`推荐结果校验失败: ...` |
+| 大模型不可用 / 没配 Key / 超时 | **不报错**，理由自动降级为模板；`meta.explainer.degraded=true`，命令行打印原因 | 同左（HTTP 200，`meta.explainer` 标注） |
 
 自测这些边界（不需要真实数据）：
 

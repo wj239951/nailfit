@@ -86,6 +86,7 @@ def recommend(
         **(explainer_kwargs or {}),
     )
     rec_text = explanations.get("recommendations", {})
+    explainer_meta = explanations.get("meta", {})
 
     cards = []
     used_tiers: set[str] = set()
@@ -125,6 +126,7 @@ def recommend(
             "candidates_considered": len(kept),
             "excluded": len(avoided),
             "engine": "rules+explain",
+            "explainer": explainer_meta,
         },
     }
 

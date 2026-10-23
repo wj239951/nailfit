@@ -102,7 +102,16 @@ def render(payload: dict) -> None:
     print("=" * 62)
     print("特征：" + summarize(payload["features"]))
     meta = payload.get("meta", {})
-    print(f"候选池：{meta.get('candidates_considered', '?')} 款可用 / {meta.get('excluded', '?')} 款被排除\n")
+    print(f"候选池：{meta.get('candidates_considered', '?')} 款可用 / {meta.get('excluded', '?')} 款被排除")
+    explainer = meta.get("explainer") or {}
+    if explainer.get("mode") == "llm":
+        suffix = "，部分为模板补位" if explainer.get("degraded") else ""
+        print(f"理由来源：大模型（{explainer.get('model')}，{explainer.get('llm_cards', 0)}/3 条{suffix}）")
+    elif explainer.get("mode") == "template":
+        print("理由来源：模板（未配置 DEEPSEEK_API_KEY 或未加 --llm）")
+    if explainer.get("error"):
+        print(f"降级原因：{explainer['error']}")
+    print()
 
     for index, card in enumerate(payload["recommendations"], start=1):
         print(f"[{index}] {card['name']}  （{card['tier']} 档，匹配度 {card['match_score']:.2f}）")

@@ -22,6 +22,13 @@ if str(ROOT) not in sys.path:
 
 import streamlit as st  # noqa: E402
 
+try:  # 方便本地 .env：装了 python-dotenv 时自动读取（缺依赖也不影响运行）
+    from dotenv import load_dotenv  # noqa: E402
+
+    load_dotenv(ROOT / ".env")
+except Exception:  # noqa: BLE001
+    pass
+
 from core import vision  # noqa: E402
 from core.errors import NailFitError  # noqa: E402
 from core.features import FeatureError  # noqa: E402
@@ -379,6 +386,17 @@ def render_result(payload: dict) -> None:
     right.metric("推荐档位", "3 档")
 
     st.caption("已选特征：" + summarize(payload.get("features") or {}))
+    explainer = meta.get("explainer") or {}
+    if explainer.get("mode") == "llm":
+        note = f"理由来源：大模型 {explainer.get('model')}（{explainer.get('llm_cards', 0)}/3 条）"
+        if explainer.get("degraded"):
+            note += "，部分回退模板"
+        st.caption(note)
+    elif explainer.get("mode") == "template":
+        if explainer.get("degraded"):
+            st.caption(f"理由来源：模板（{explainer.get('error') or '大模型不可用，已降级'}）")
+        else:
+            st.caption("理由来源：模板（侧边栏未开启大模型）")
     st.divider()
 
     views = [card_view(card) for card in payload.get("recommendations", [])]
