@@ -50,3 +50,23 @@ def test_deep_skin_blocks_light_nude() -> None:
 def test_avoid_list_is_present() -> None:
     payload = recommend(HandFeatures.from_dict(SHORT_WIDE_WARM), use_llm=False)
     assert isinstance(payload["avoid"], list)
+
+
+def test_relaxed_fallback_keeps_families_distinct() -> None:
+    """候选拥挤（色相都挨着）时，放宽步骤也不能选重色系。"""
+    from core.data import load_taxonomy
+    from core.selector import Scored, pick_three
+
+    features = HandFeatures.from_dict(SHORT_WIDE_WARM)
+    cramped = [
+        Scored(style={"id": "x1", "color_family": "nude_pink", "hue": 20, "scene": ["commute"]}, score=0.9, reasons=()),
+        Scored(style={"id": "x2", "color_family": "nude_pink", "hue": 21, "scene": ["commute"]}, score=0.8, reasons=()),
+        Scored(style={"id": "x3", "color_family": "nude_pink", "hue": 22, "scene": ["date"]}, score=0.7, reasons=()),
+        Scored(style={"id": "x4", "color_family": "nude_pink", "hue": 23, "scene": ["festival"]}, score=0.6, reasons=()),
+        Scored(style={"id": "x5", "color_family": "berry", "hue": 24, "scene": ["commute"]}, score=0.5, reasons=()),
+        Scored(style={"id": "x6", "color_family": "blue_green", "hue": 25, "scene": ["date"]}, score=0.4, reasons=()),
+    ]
+    chosen = pick_three(cramped, load_taxonomy(), features)
+    assert len(chosen) == 3
+    families = [item.style["color_family"] for item in chosen]
+    assert len(set(families)) == 3, f"色系重复：{families}"

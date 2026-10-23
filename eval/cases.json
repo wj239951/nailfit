@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "M18 评测用例（手工期望，基于规则语义与款式目测）。M19 会扩充到约 30 张真实手照 + 图片字段。expect 里：tone/value/shape/length_fit 是软硬约束（硬：tone/value/shape/禁止项；scene 只算命中率）。",
+  "note": "NailFit 推荐质量评测用例（M18 手工特征 8 条 + M19 手照 17 条）。features 为人工标注；expect.tone/value 只对 safe 档严格检查；手照用例的甲型/甲长为视觉启发式标注，故 expect 不约束 shape/length_fit。",
   "cases": [
     {
       "id": "c01",
@@ -33,7 +33,8 @@
         "forbid_families": [
           "blue_green"
         ]
-      }
+      },
+      "source": "manual"
     },
     {
       "id": "c02",
@@ -60,7 +61,8 @@
           "almond",
           "oval"
         ]
-      }
+      },
+      "source": "manual"
     },
     {
       "id": "c03",
@@ -87,7 +89,8 @@
           "square",
           "squoval"
         ]
-      }
+      },
+      "source": "manual"
     },
     {
       "id": "c04",
@@ -114,7 +117,8 @@
           "almond",
           "oval"
         ]
-      }
+      },
+      "source": "manual"
     },
     {
       "id": "c05",
@@ -142,7 +146,8 @@
           "oval",
           "squoval"
         ]
-      }
+      },
+      "source": "manual"
     },
     {
       "id": "c06",
@@ -165,7 +170,8 @@
           "deep",
           "mid"
         ]
-      }
+      },
+      "source": "manual"
     },
     {
       "id": "c07",
@@ -188,7 +194,8 @@
           "light",
           "mid"
         ]
-      }
+      },
+      "source": "manual"
     },
     {
       "id": "c08",
@@ -210,6 +217,483 @@
         "value": [
           "light",
           "mid"
+        ]
+      },
+      "source": "manual"
+    },
+    {
+      "id": "m19-01",
+      "name": "手照·左手背抬起 A01",
+      "source": "hand_photo",
+      "image": "raw_hands/hand01_lift_01.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-02",
+      "name": "手照·左手背抬起 A02（视觉未检测到）",
+      "source": "hand_photo",
+      "image": "raw_hands/hand01_lift_02.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-03",
+      "name": "手照·左手背抬起 A03",
+      "source": "hand_photo",
+      "image": "raw_hands/hand01_lift_03.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-04",
+      "name": "手照·右手自然握 A04",
+      "source": "hand_photo",
+      "image": "raw_hands/hand01_right_01.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-05",
+      "name": "手照·右手展开 标准角 A05",
+      "source": "hand_photo",
+      "image": "raw_hands/hand01_right_02.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-06",
+      "name": "手照·右手自然握 A06",
+      "source": "hand_photo",
+      "image": "raw_hands/hand01_right_03.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-07",
+      "name": "手照·左手背抬起 B01（视觉未检测到）",
+      "source": "hand_photo",
+      "image": "raw_hands/hand02_lift_01.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "slender",
+        "nail_shape": "oval",
+        "length": "long"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-08",
+      "name": "手照·左手背抬起 B02 标准角",
+      "source": "hand_photo",
+      "image": "raw_hands/hand02_lift_02.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "slender",
+        "nail_shape": "oval",
+        "length": "long"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-09",
+      "name": "手照·右手自然握 B03（暗光）",
+      "source": "hand_photo",
+      "image": "raw_hands/hand02_right_01.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "slender",
+        "nail_shape": "oval",
+        "length": "long"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-10",
+      "name": "手照·右手自然握 B04（暗光）",
+      "source": "hand_photo",
+      "image": "raw_hands/hand02_right_02.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "slender",
+        "nail_shape": "oval",
+        "length": "long"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-11",
+      "name": "手照·右手自然握 B05",
+      "source": "hand_photo",
+      "image": "raw_hands/hand02_right_03.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "slender",
+        "nail_shape": "oval",
+        "length": "long"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-12",
+      "name": "手照·标准手背 158",
+      "source": "hand_photo",
+      "image": "raw_hands/new01_微信图片_20261023104529_158_48.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-13",
+      "name": "手照·标准手背 159",
+      "source": "hand_photo",
+      "image": "raw_hands/new01_微信图片_20261023104543_159_48.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-14",
+      "name": "手照·标准手背 160",
+      "source": "hand_photo",
+      "image": "raw_hands/new01_微信图片_20261023104554_160_48.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-15",
+      "name": "手照·标准手背 161",
+      "source": "hand_photo",
+      "image": "raw_hands/new01_微信图片_20261023104602_161_48.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-16",
+      "name": "手照·标准手背 162",
+      "source": "hand_photo",
+      "image": "raw_hands/new01_微信图片_20261023104608_162_48.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
+        ]
+      }
+    },
+    {
+      "id": "m19-17",
+      "name": "手照·标准手背 163",
+      "source": "hand_photo",
+      "image": "raw_hands/new01_微信图片_20261023104619_163_48.jpg",
+      "features": {
+        "ita_band": "light",
+        "warmth": "warm",
+        "scene": "commute",
+        "hand_type": "standard",
+        "nail_bed_ratio": "standard",
+        "nail_shape": "round",
+        "length": "short"
+      },
+      "expect": {
+        "tone": [
+          "warm",
+          "neutral"
+        ],
+        "value": [
+          "light",
+          "mid"
+        ],
+        "forbid_families": [
+          "blue_green"
         ]
       }
     }

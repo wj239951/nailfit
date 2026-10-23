@@ -168,3 +168,143 @@ def test_main_strict_returns_zero_for_current_cases(capsys):
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "契约通过" in captured.out
+
+
+# --------------------------------------------------------------------------- #
+# M19：手照视觉层指标
+# --------------------------------------------------------------------------- #
+
+
+def _photo_case(**overrides) -> dict:
+    case = {
+        "id": "m19-test",
+        "name": "测试手照",
+        "source": "hand_photo",
+        "image": "raw_hands/fake.jpg",
+        "features": {
+            "ita_band": "light",
+            "warmth": "warm",
+            "scene": "commute",
+            "hand_type": "standard",
+            "nail_bed_ratio": "standard",
+            "nail_shape": "round",
+            "length": "short",
+        },
+        "expect": {"tone": ["warm", "neutral"]},
+    }
+    case.update(overrides)
+    return case
+
+
+def _fake_result(features: dict, quality: str = "ok"):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(features=features, quality=quality)
+
+
+def test_load_cases_rejects_unknown_source():
+    import json
+    import shutil
+
+    path = _scratch_dir() / "cases.json"
+    try:
+        payload = {"cases": [{"id": "x", "features": CASES[0]["features"], "source": "camera"}]}
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="source 非法"):
+            evalrun.load_cases(path)
+    finally:
+        shutil.rmtree(_scratch_dir(), ignore_errors=True)
+
+
+def test_load_cases_requires_image_for_hand_photo():
+    import json
+    import shutil
+
+    path = _scratch_dir() / "cases.json"
+    try:
+        payload = {"cases": [{"id": "x", "features": CASES[0]["features"], "source": "hand_photo"}]}
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="没有 image"):
+            evalrun.load_cases(path)
+    finally:
+        shutil.rmtree(_scratch_dir(), ignore_errors=True)
+
+
+def test_check_vision_accuracy_and_detection():
+    case = _photo_case()
+    calls: list[Path] = []
+
+    def fake_extract(image_path):
+        calls.append(image_path)
+        return _fake_result(dict(case["features"]))  # 与标注完全一致
+
+    vision = evalrun.check_vision([case], root=ROOT, extract=fake_extract)
+    assert vision["cases"] == 1
+    assert vision["detected"] == 1
+    assert vision["detection_rate"] == 1.0
+    assert set(vision["accuracy"]) == set(evalrun.VISION_FIELDS)
+    assert all(rate == 1.0 for rate in vision["accuracy"].values())
+    assert calls and calls[0].name == "fake.jpg"
+
+
+def test_check_vision_only_counts_fields_vision_returns():
+    case = _photo_case()
+    # 只看肤色：姿态不合格时几何字段不输出，分母应只算肤色
+    vision = evalrun.check_vision(
+        [case],
+        root=ROOT,
+        extract=lambda _path: _fake_result({"ita_band": "light", "warmth": "neutral"}, quality="clenched"),
+    )
+    assert set(vision["accuracy"]) == {"ita_band", "warmth"}
+    assert vision["accuracy"]["ita_band"] == 1.0
+    assert vision["accuracy"]["warmth"] == 0.0
+    assert vision["per_case"][0]["matches"]["warmth"] is False
+
+
+def test_check_vision_reports_failed_extraction():
+    case = _photo_case()
+
+    def boom(_path):
+        raise RuntimeError("no hand")
+
+    vision = evalrun.check_vision([case], root=ROOT, extract=boom)
+    assert vision["detected"] == 0
+    assert vision["detection_rate"] == 0.0
+    assert "no hand" in vision["per_case"][0]["error"]
+
+
+def test_evaluate_counts_hand_photo_cases():
+    report = evalrun.evaluate([_photo_case()], STYLES, TAXONOMY, runs=1)
+    assert report["summary"]["hand_photo_cases"] == 1
+    assert "vision" not in report
+
+
+def test_evaluate_case_handles_recommend_error(monkeypatch):
+    from core.validator import ContractError
+
+    def boom(*_args, **_kwargs):
+        raise ContractError("三条推荐的色系重复: nude_pink")
+
+    monkeypatch.setattr(evalrun, "recommend", boom)
+    item = evalrun.evaluate_case(CASES[0], STYLES, TAXONOMY, STYLE_MAP, runs=1)
+    assert item["contract_ok"] is False
+    assert "推荐失败" in item["contract_issues"][0]
+    assert item["error"]
+
+
+def test_main_vision_flag(monkeypatch, capsys):
+    monkeypatch.setattr(
+        evalrun,
+        "check_vision",
+        lambda cases, **kwargs: {
+            "cases": 1,
+            "detected": 1,
+            "detection_rate": 1.0,
+            "accuracy": {"ita_band": 1.0},
+            "per_case": [],
+        },
+    )
+    exit_code = evalrun.main(["--no-report", "--runs", "1", "--vision"])
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "视觉层：检测 1/1" in captured.out

@@ -79,11 +79,17 @@ def pick_three(ranked: list[Scored], taxonomy: dict, features: HandFeatures) -> 
         if not taken(candidate) and acceptable(candidate):
             chosen.append(candidate)
 
-    # 3) 仍不足：放宽多样性，保证能出 3 条
+    # 3) 仍不足：放宽色相间隔，但 color_family 必须不重复（校验层硬要求）
     for candidate in ranked:
         if len(chosen) >= 3:
             break
-        if not taken(candidate):
-            chosen.append(candidate)
+        if taken(candidate):
+            continue
+        if forbid_same_family and any(
+            candidate.style.get("color_family") == picked.style.get("color_family")
+            for picked in chosen
+        ):
+            continue
+        chosen.append(candidate)
 
     return chosen[:3]

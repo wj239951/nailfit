@@ -77,8 +77,8 @@ nailfit/
 │   └── check_llm.py         # 解释层自检（M17：云端 Key / 本地 Ollama 联调）
 ├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层 / 评测
 ├── eval/
-│   ├── run.py               # 推荐质量评测（M18：契约 / 合理性 / 多样性 / 稳定性）
-│   ├── cases.json           # 评测用例（M18 种子 8 条，M19 扩到 30 张手照）
+│   ├── run.py               # 推荐质量评测（M18 五维 + M19 手照视觉层）
+│   ├── cases.json           # 评测用例（8 条手工特征 + 17 条手照，共 25 条）
 │   └── reports/             # 每次运行的 JSON 报告（gitignore）
 ├── models/                  # MediaPipe 模型缓存（gitignore，首次使用时自动下载）
 ├── raw_hands/               # 本地手照素材（gitignore）
@@ -110,8 +110,10 @@ python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
 # 3. 跑测试
 pytest -q
 
-# 3.1 推荐质量评测（M18：契约 / 合理性 / 多样性 / 稳定性，报告写到 eval/reports/）
+# 3.1 推荐质量评测（M18 五维 + M19 视觉层，报告写到 eval/reports/）
 python eval/run.py
+python eval/run.py --vision             # 额外量手照识别（检测率 / 特征准确率）
+python eval/run.py --styles data/styles.demo.json   # 换 43 条演示库跑
 
 # 4. 启动 API
 uvicorn api.main:app --reload --port 8000
@@ -214,12 +216,13 @@ python scripts/manual.py --llm   # 手工录入版同样支持
 
 Key 放在系统环境变量 `DEEPSEEK_API_KEY`（或项目根目录 `.env`）均可，`check_llm.py` / API / 前端共用同一份配置。
 
-## 推荐质量评测（M18）
+## 推荐质量评测（M18 / M19）
 
-推荐得「对不对」不能只靠肉眼抽查。`eval/run.py` 把一批人工标注的用例跑一遍，量化五个维度：
+推荐得「对不对」不能只靠肉眼抽查。`eval/run.py` 把一批人工标注的用例跑一遍，量化五个维度；`--vision` 再把手照识别接进同一份报告：
 
 ```bash
-python eval/run.py                      # 跑 eval/cases.json，3 次重复
+python eval/run.py                      # 跑 eval/cases.json（25 条），3 次重复
+python eval/run.py --vision             # 额外量手照视觉层：检测率 / 特征准确率
 python eval/run.py --llm --llm-cases 3  # 额外量解释层（LLM 有效条数 / 降级 / 耗时）
 python eval/run.py --strict             # 合理性低于阈值返回非 0（CI 用）
 python eval/run.py --styles data/styles.demo.json   # 换 43 条演示库跑
@@ -228,9 +231,10 @@ python eval/run.py --styles data/styles.demo.json   # 换 43 条演示库跑
 | 维度 | 口径 | 当前结果（样例库 15 条，2026-10-23） |
 | --- | --- | --- |
 | 契约 contract | 3 条推荐、id 存在、色系不重复、理由非空且 ≤160 字、档位合法 | 100% |
-| 合理性 fit | safe 档（主推荐）的 tone / value / shape 与人工期望一致；禁止项对所有档位生效 | 100%（8/8 用例） |
+| 合理性 fit | safe 档（主推荐）的 tone / value / shape 与人工期望一致；禁止项对所有档位生效 | 100%（25/25 用例） |
 | 多样性 diversity | 色相圆形间隔 ≥ `min_hue_gap`、三档覆盖 | 100%，三档覆盖均值 3.00 |
-| 稳定性 stability | 重复运行 top-1 一致率；单特征抖动一档时 top-1 变化率 | 稳定 100%，抖动 19% |
+| 稳定性 stability | 重复运行 top-1 一致率；单特征抖动一档时 top-1 变化率 | 稳定 100%，抖动 16% |
+| 视觉层（`--vision`） | 17 条手照用例：检测率 + 自动特征 vs 人工标注 | 检测 88%（15/17）；肤色 73%、甲床 100%、甲型 71%、甲长 100%、手型 50% |
 | 解释层（可选） | LLM 有效条数 / 降级例数 / 平均耗时 | `--llm` 时输出 |
 
 用例文件 `eval/cases.json` 每条 = 7 项手部特征 + 人工期望（tone / value / shape / 禁止项）。M18 首轮评测曾暴露 3 条规则/数据缺口，已在「补规则缺口」中修复：
@@ -239,7 +243,12 @@ python eval/run.py --styles data/styles.demo.json   # 换 43 条演示库跑
 2. Y2K/冷调场景提不上金属/镜面类 → 样例库补 `s014 冷灰蓝·纯色`、`s015 深莓·猫眼`（13→15 条）；
 3. 深肤不分冷暖、value 没有下限 → 拆成 `skin_deep_warm` / `skin_deep_cool` / `skin_deep_neutral`，`value` 加中深色下限。
 
-修复后 8/8 用例全部通过，`known_gap` 计数为 0（机制保留，供 M19 扩评测集时继续标注新缺口）。M19 会用真实手照把用例扩到约 30 条。
+修复后 8/8 手工用例全部通过，`known_gap` 计数为 0（机制保留，供继续标注新缺口）。
+
+**M19 扩评测集**：在 8 条手工特征用例之上，补了 **17 条真实手照用例**（`source: hand_photo` + `image`，两位被摄者的自然握持/标准手背照），case 期望由人工标注。新增 `--vision` 指标同时回答两件事：
+- 视觉层能不能用：17 张里 15 张检测到手（2 张未检测到）；肤色/甲床/甲长最稳，手型最不稳（50%），符合“自然握拳下手型信息不足”的预期；
+- 推荐层在演示库上的表现：43 条演示库（autotag 生成）跑出**契约 100%、合理性 92%、多样性 12%**——合理性 2 条失败与多样性偏低都来自 autotag 的标签噪声（演示库 `tone`/`hue` 由主色估计，暖区扎堆），不是推荐逻辑回归；同时 M19 的演示库评测暴露并修掉了一个真实的契约 bug：候选色相太挤时放宽步骤会选出同色系，现改为“放宽色相但仍禁止同色系”。
+
 
 ## 网页前端（Streamlit，M14）
 
@@ -423,11 +432,11 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 
 `data/styles.demo.json` 是同一 schema 的 43 条演示库（`autotag` 生成，额外带 `autotag: true` 与 `name`，图片指向 `static/demo/`），只用于工程演示；正式库仍为 `data/styles.json`。
 
-## 评测（TODO）
+## 评测（M18 / M19 已完成）
 
-- 30 张真实手照 → 人工判断「3 个推荐里至少 1 个合理」的比例
-- 多样性：3 个推荐是否出现同色系 / 同款式
-- 理由准确性：`matched_rules` 是否真的对应推荐结果
+- ✅ 25 条用例（8 手工特征 + 17 手照）的契约 / 合理性 / 多样性 / 稳定性，见「推荐质量评测」
+- ✅ 视觉层检测率与特征准确率（`--vision`）
+- 待办：单条样式级「用户真实反馈」，以及正式款式库上的评测（演示库标签噪声大，只作参考）
 
 ## 图片来源
 

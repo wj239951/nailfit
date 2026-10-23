@@ -6,10 +6,12 @@
 3. 多样性 diversity—— 三档覆盖数、色相圆形间隔 >= min_hue_gap、色系不重复
 4. 稳定性 stability—— 重复运行 top-1 一致率；单特征轻微抖动时 top-1 变化率
 5. 降级率 degrade —— 可选 --llm：LLM 有效条数、降级率、平均耗时
+6. 视觉层 vision  —— 可选 --vision：手照自动特征 vs 人工标注的检测率/准确率（M19）
 
 用法：
     python eval/run.py                     # 跑 eval/cases.json，3 次重复
     python eval/run.py --llm --llm-cases 3 # 同时量解释层（DeepSeek，读 .env）
+    python eval/run.py --vision            # 额外量手照视觉层（需要本地 mediapipe 模型）
     python eval/run.py --strict            # 合理性低于阈值返回非 0（CI 用）
 
 输出：
@@ -51,6 +53,11 @@ JITTER_FIELDS = (
     "hand_type",
 )
 
+# 视觉层（M19）：手照用例的自动特征与人工标注对比
+VISION_SKIN_FIELDS = ("ita_band", "warmth")
+VISION_GEOMETRY_FIELDS = ("hand_type", "nail_bed_ratio", "nail_shape", "length")
+VISION_FIELDS = VISION_SKIN_FIELDS + VISION_GEOMETRY_FIELDS
+
 
 def _log(message: str) -> None:
     print(message, flush=True)
@@ -78,6 +85,11 @@ def load_cases(path: Path = DEFAULT_CASES) -> list[dict[str, Any]]:
         for key in ("tone", "value", "shape", "length_fit"):
             if key in expect and not isinstance(expect[key], list):
                 raise ValueError(f"{case_id} 的 expect.{key} 必须是列表")
+        source = case.get("source", "manual")
+        if source not in {"manual", "hand_photo"}:
+            raise ValueError(f"{case_id} 的 source 非法：{source!r}")
+        if source == "hand_photo" and not case.get("image"):
+            raise ValueError(f"{case_id} 是 hand_photo 用例但没有 image")
     return cases
 
 
@@ -175,6 +187,82 @@ def check_scene(style: dict[str, Any], features: HandFeatures) -> bool:
 
 
 # --------------------------------------------------------------------------- #
+# 2.5 视觉层（M19）：手照自动特征 vs 人工标注
+# --------------------------------------------------------------------------- #
+
+
+def _default_vision_extract(image_path: Path) -> Any:
+    """真实视觉层（延迟导入：评测主体不依赖 mediapipe / 模型）。"""
+    from core import vision
+
+    return vision.extract(image_path, auto_download=False, preview=False)
+
+
+def check_vision(
+    cases: list[dict[str, Any]],
+    *,
+    root: Path = ROOT,
+    extract: Any = None,
+) -> dict[str, Any]:
+    """跑手照用例，量视觉层的检测率与特征准确率。
+
+    只统计「视觉层实际给出的字段」：肤色任何质量都会给；手型/甲床/甲型/
+    甲长只在质量达标时给，所以几何准确率的分母会小于肤色。
+    """
+    extractor = extract or _default_vision_extract
+    per_case: list[dict[str, Any]] = []
+    field_total: dict[str, int] = {field: 0 for field in VISION_FIELDS}
+    field_hit: dict[str, int] = {field: 0 for field in VISION_FIELDS}
+    detected = 0
+    checked = 0
+    for case in cases:
+        if case.get("source") != "hand_photo":
+            continue
+        checked += 1
+        entry: dict[str, Any] = {
+            "id": case["id"],
+            "name": case.get("name", ""),
+            "image": case.get("image", ""),
+            "expected": {field: case["features"].get(field) for field in VISION_FIELDS},
+            "detected": False,
+            "quality": "",
+            "matches": {},
+        }
+        try:
+            result = extractor(root / str(case.get("image", "")))
+        except Exception as exc:  # noqa: BLE001 - 单张失败不中断评测
+            entry["error"] = str(exc)
+            per_case.append(entry)
+            continue
+        detected += 1
+        entry["detected"] = True
+        entry["quality"] = str(getattr(result, "quality", ""))
+        auto = dict(getattr(result, "features", {}) or {})
+        entry["auto"] = {field: auto.get(field) for field in VISION_FIELDS}
+        for field in VISION_FIELDS:
+            if field not in auto:
+                continue
+            hit = auto.get(field) == case["features"].get(field)
+            entry["matches"][field] = hit
+            field_total[field] += 1
+            field_hit[field] += int(hit)
+        per_case.append(entry)
+
+    accuracy = {
+        field: round(field_hit[field] / field_total[field], 3)
+        for field in VISION_FIELDS
+        if field_total[field]
+    }
+    return {
+        "cases": checked,
+        "detected": detected,
+        "detection_rate": round(detected / checked, 3) if checked else 0.0,
+        "accuracy": accuracy,
+        "per_case": per_case,
+    }
+
+
+# --------------------------------------------------------------------------- #
 # 3. 多样性
 # --------------------------------------------------------------------------- #
 
@@ -256,7 +344,30 @@ def evaluate_case(
 ) -> dict[str, Any]:
     features = HandFeatures.from_dict(case["features"])
     expect = case.get("expect") or {}
-    result = recommend(features, use_llm=False, styles=styles)
+    try:
+        result = recommend(features, use_llm=False, styles=styles)
+    except Exception as exc:  # noqa: BLE001 - 推荐失败也是一条评测结果，不能中断全量
+        message = f"推荐失败：{exc}"
+        return {
+            "id": case["id"],
+            "name": case.get("name", ""),
+            "top1": "",
+            "ids": [],
+            "contract_ok": False,
+            "contract_issues": [message],
+            "fit_ok": False,
+            "fit_issues": [message],
+            "scene_hit_rate": 0.0,
+            "tier_coverage": 0,
+            "safe_cards": 0,
+            "fill_cards": 0,
+            "known_gap": case.get("known_gap") or "",
+            "hue_spread": 0.0,
+            "hue_ok": False,
+            "stability": 0.0,
+            "jitter_change_rate": 0.0,
+            "error": str(exc),
+        }
     recs = _as_records(result)
 
     contract_issues = check_contract(recs, style_map, taxonomy)
@@ -357,6 +468,7 @@ def evaluate(
     runs: int = 3,
     llm: bool = False,
     llm_cases: int = 3,
+    vision: bool = False,
 ) -> dict[str, Any]:
     style_map = styles_index(styles)
     case_results = [
@@ -381,6 +493,7 @@ def evaluate(
         ),
         "known_gap_cases": len(gap_cases),
         "known_gap_failing": sum(1 for item in gap_cases if not item["fit_ok"]),
+        "hand_photo_cases": sum(1 for case in cases if case.get("source") == "hand_photo"),
     }
     report: dict[str, Any] = {
         "meta": {
@@ -394,6 +507,8 @@ def evaluate(
     }
     if llm:
         report["llm"] = _llm_metrics(cases, styles, style_map, taxonomy, limit=llm_cases)
+    if vision:
+        report["vision"] = check_vision(cases)
     return report
 
 
@@ -444,6 +559,19 @@ def print_report(report: dict[str, Any]) -> None:
         )
         for error in llm["errors"]:
             _log(f"  ! {error}")
+    vision = report.get("vision")
+    if vision:
+        detail = " · ".join(f"{field} {rate:.0%}" for field, rate in vision["accuracy"].items())
+        _log(
+            f"视觉层：检测 {vision['detected']}/{vision['cases']} "
+            f"（{vision['detection_rate']:.0%}） · 特征准确率 {detail or '—'}"
+        )
+        for entry in vision["per_case"]:
+            misses = [field for field, hit in entry["matches"].items() if not hit]
+            if entry.get("error"):
+                _log(f"  ! {entry['id']} 未识别：{entry['error']}")
+            elif misses:
+                _log(f"  Δ {entry['id']} 特征不符：{', '.join(misses)}")
     _log("=" * 68)
 
 
@@ -460,6 +588,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--runs", type=int, default=3, help="每个用例重复运行次数（稳定性）")
     parser.add_argument("--llm", action="store_true", help="额外测解释层（需要 .env 里的 DeepSeek Key）")
     parser.add_argument("--llm-cases", type=int, default=3, help="解释层测几个用例")
+    parser.add_argument("--vision", action="store_true", help="额外测手照视觉层（M19，需要本地 mediapipe 模型）")
     parser.add_argument("--json", default=None, help="报告输出路径（默认 eval/reports/eval-<时间戳>.json）")
     parser.add_argument("--no-report", action="store_true", help="不落盘 JSON 报告")
     parser.add_argument("--min-fit", type=float, default=0.9, help="--strict 下的合理性通过率下限")
@@ -476,6 +605,7 @@ def main(argv: list[str] | None = None) -> int:
         runs=max(1, args.runs),
         llm=args.llm,
         llm_cases=max(1, args.llm_cases),
+        vision=args.vision,
     )
     print_report(report)
     if not args.no_report:
