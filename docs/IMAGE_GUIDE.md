@@ -61,7 +61,7 @@ python scripts/prepare_images.py --src raw_images/shot1.jpg --out static/styles/
 
 ## 6. 演示图片（demo，2026-10-23）
 
-用户提供的 16 张平台截图 → 处理出 10 张单款演示图，放 `static/demo/`：
+用户先后提供的 27 张平台截图 / 素材 → 处理出 21 张单款演示图，放 `static/demo/`（第一批 10 张，第二批 11 张，均为 2026-10-23）。
 
 | 文件 | 来源原图 | 定位 |
 |---|---|---|
@@ -75,10 +75,22 @@ python scripts/prepare_images.py --src raw_images/shot1.jpg --out static/styles/
 | `demo08_yellow_daisy.jpg` | IMG_9516 | 黄渐变 + 小白花，highlight / 春夏 |
 | `demo09_glitter_cartoon.jpg` | IMG_9518 | 细闪 + 卡通贴片短甲，甜酷 / 学生 |
 | `demo10_nude_french_dots.jpg` | IMG_9525 | 裸色白法式 + 波点，safe / 通勤 |
+| `demo11_blue_almond_stars.jpg` | 0097（单图） | 蓝渐变杏仁 + 星星/波点，highlight / y2k |
+| `demo12_sheer_glitter_heart.jpg` | 0098（2/10） | 透色 + 心形银箔长杏仁，highlight / 甜酷 |
+| `demo13_blue_star_satin.jpg` | 0099（3/10） | 裸粉 + 蓝白星星法式，highlight |
+| `demo14_glitter_lines_nude.jpg` | 0100（4/10） | 裸色 + 银色线条闪，safe / highlight |
+| `demo15_bow_star_nude.jpg` | 0101（5/10） | 透粉 + 蝴蝶结/星星手绘，highlight / 甜 |
+| `demo16_glitter_checker.jpg` | 0102（6/10） | 银闪 + 棋盘格拼接，bold / y2k |
+| `demo17_flower_stone_nude.jpg` | 0103（7/10） | 裸粉 + 立体花朵/钻饰，safe / 约会 |
+| `demo18_glitter_ombre_nude.jpg` | 0104（9/10） | 裸色 + 银色亮片渐变长杏仁，highlight |
+| `demo19_white_lace_long.jpg` | 0105（6/13） | 白色蕾丝长尖甲，bold / 婚礼 |
+| `demo20_french_bow_long.jpg` | 0106（13/13） | 裸透 + 白法式 + 蝴蝶结长甲，highlight / 婚礼 |
+| `demo21_brown_velvet_floral.jpg` | 0107（10/10） | 棕猫眼 + 碎花长杏仁，bold / 暖秋 |
 
 - **用途**：仅工程演示（README 截图、前端联调占位、面试讲解示意）。
 - **不登记进款式库**：不写入 `data/styles.json`、不占 `s0xx` 编号；`static/demo/` 已加入 `.gitignore`，不进仓库。
 - 四宫格拼图（IMG_0043 / 0044 / 0045 / 0046）未保留；2 张双拼 / 内嵌 App UI 的截图未使用。
+- 第二批 10 张是同一款图集查看器截图：顶栏 `0–505`、底栏 `2113–2622` 为黑色 UI，统一用 `--box 0,505,1206,2113` 裁成 3:4（无需 padding）；`0097` 本身接近 3:4，直接缩放。
 - 个别图仍带平台角标（`demo04` 的 `8/100`、相机图标；`demo07` 的 `22/100`）和博主水印，保留作为"来源就是平台截图"的直观说明；正式库请换成自拍 / 图库图。
 
 处理命令（人工框选照片区域 → 3:4 → 768×1024 → ≤300 KB；宽图用 `--fit pad`）：
@@ -91,4 +103,8 @@ python scripts/prepare_images.py --src raw_images/9527_polka_bow.jpg ^
 # 宽图 / 比例差太多：整图放进 3:4 画布，补底色
 python scripts/prepare_images.py --src raw_images/9524_sheer_nude.jpg ^
   --out static/demo/demo03_sheer_nude.jpg --box 0,704,1206,1608 --fit pad --pad-color "#f5f2ec"
+
+# 第二批图集截图：统一裁掉黑色顶栏 / 底栏
+python scripts/prepare_images.py --src raw_images/0103_flower_stone_nude.jpg ^
+  --out static/demo/demo17_flower_stone_nude.jpg --box 0,505,1206,2113
 ```
