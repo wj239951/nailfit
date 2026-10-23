@@ -47,7 +47,8 @@ nailfit/
 │   ├── rules.yaml           # 匹配规则（改规则不改代码）
 │   └── styles.sample.json   # 款式库样例（13 条，替换成真实款式）
 ├── core/
-│   ├── data.py              # YAML / JSON 加载
+│   ├── data.py              # YAML / JSON 加载（文件缺失/损坏时报清晰错误）
+│   ├── errors.py            # 统一异常：数据缺失 / 候选不足 / 契约失败
 │   ├── features.py          # HandFeatures 数据契约 + 校验
 │   ├── color.py             # sRGB → Lab → ITA°（肤色量化）
 │   ├── landmarks.py         # 21 关键点 → 几何特征（启发式）
@@ -188,7 +189,28 @@ python scripts/validate_styles.py --styles data/styles.json
 返回三张推荐卡（含 `matched_rules` 与 `reason`）、以及 `avoid` 避雷提示。
 
 ### `GET /api/styles`
-款式库列表（用于前端展示与调试）。
+款式库列表（用于前端展示与调试）。库为空或数据损坏时返回 `503`。
+
+## 错误处理
+
+所有失败路径都返回**一行能看懂的中文原因**，不用翻 traceback：
+
+| 场景 | CLI 表现 | API 表现 |
+|---|---|---|
+| 特征值非法（如 `length=eternal`） | `特征非法：...`，退出码 1 | `422`，`detail` 说明哪个字段不合法 |
+| 款式库文件缺失 / JSON 损坏 | `✗ 推荐失败：...`，退出码 2 | `503`，`款式库不可用: ...` |
+| 款式库为空（`styles: []`） | 同上 | `503`，`款式库不可用: ...` |
+| 规则过滤后无候选 | `✗ 推荐失败：没有通过硬性过滤的款式...` | `422`，`无法生成推荐: ...` |
+| 过滤后不足 3 款（凑不齐三档） | 同上 | `422`，`过滤后只剩 N 款，至少需要 3 款` |
+| 输出契约失败（模型编了不存在的款式） | `✗ 推荐失败：...` | `502`，`推荐结果校验失败: ...` |
+
+自测这些边界（不需要真实数据）：
+
+```bash
+python scripts/demo.py                            # 正常路径
+python scripts/validate_styles.py --check-images  # 数据完整性
+pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
+```
 
 ## 数据契约
 

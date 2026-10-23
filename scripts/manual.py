@@ -24,6 +24,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from core.data import load_taxonomy  # noqa: E402
+from core.errors import NailFitError  # noqa: E402
 from core.features import FeatureError, HandFeatures  # noqa: E402
 from core.labels import FIELD_TITLES, label, summarize  # noqa: E402
 from core.pipeline import recommend  # noqa: E402
@@ -182,8 +183,8 @@ def main(argv: list[str] | None = None) -> int:
     features = features_from_args(args)
     try:
         payload = recommend(features, free_text=args.free_text, use_llm=args.llm)
-    except (ContractError, ValueError) as exc:
-        print(f"推荐失败：{exc}", file=sys.stderr)
+    except (ContractError, NailFitError) as exc:
+        print(f"✗ 推荐失败：{exc}", file=sys.stderr)
         return 2
 
     if args.json:

@@ -4,6 +4,8 @@
     python scripts/demo.py --scenario deep_festival
     python scripts/demo.py --llm           # 有 DEEPSEEK_API_KEY 时走云端
     python scripts/demo.py --json          # 输出原始 JSON
+
+出错时打印一行清晰的中文原因并以退出码 2 结束（不打印 traceback）。
 """
 
 from __future__ import annotations
@@ -17,8 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from core.features import HandFeatures  # noqa: E402
+from core.errors import NailFitError  # noqa: E402
+from core.features import FeatureError, HandFeatures  # noqa: E402
 from core.pipeline import recommend  # noqa: E402
+from core.validator import ContractError  # noqa: E402
 
 SCENARIOS: dict[str, dict] = {
     "short_wide_warm": {
@@ -90,21 +94,26 @@ def _print_human(payload: dict) -> None:
             print(f"  - {tip}")
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description="NailFit 命令行 demo")
     parser.add_argument("--scenario", default="short_wide_warm", choices=sorted(SCENARIOS))
     parser.add_argument("--llm", action="store_true", help="有 DEEPSEEK_API_KEY 时调用云端生成理由")
     parser.add_argument("--json", action="store_true", help="输出原始 JSON")
     args = parser.parse_args()
 
-    features = HandFeatures.from_dict(SCENARIOS[args.scenario])
-    payload = recommend(features, use_llm=args.llm)
+    try:
+        features = HandFeatures.from_dict(SCENARIOS[args.scenario])
+        payload = recommend(features, use_llm=args.llm)
+    except (FeatureError, ContractError, NailFitError) as exc:
+        print(f"✗ 推荐失败：{exc}", file=sys.stderr)
+        return 2
 
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         _print_human(payload)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

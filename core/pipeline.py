@@ -2,11 +2,17 @@
 
 API 层（api/routes.py）和命令行（scripts/demo.py）都只调用这里，
 保证两条入口的行为完全一致。
+
+异常策略：
+- 款式库为空/数据损坏 → EmptyStyleLibraryError（API 映射 503）
+- 过滤后没有候选、候选不足 3 款 → NoCandidateError（API 映射 422）
+- 输出契约失败 → ContractError（由 validator 抛出，API 映射 502）
 """
 
 from __future__ import annotations
 
 from .data import load_styles, load_taxonomy
+from .errors import EmptyStyleLibraryError, NoCandidateError
 from .explainer import explain
 from .features import HandFeatures
 from .retriever import SemanticScorer
@@ -35,10 +41,18 @@ def recommend(
     taxonomy = load_taxonomy()
     engine = engine or RuleEngine(taxonomy)
     styles = list(styles if styles is not None else load_styles())
+    if not styles:
+        raise EmptyStyleLibraryError("款式库为空：请先在 data/styles.sample.json 录入款式")
 
     kept, avoided = engine.filter_styles(styles, features)
     if not kept:
-        raise ValueError("没有可用款式：请放宽规则或补充款式库")
+        raise NoCandidateError(
+            "没有通过硬性过滤的款式：请放宽场景/甲长限制，或补充款式库"
+        )
+    if len(kept) < 3:
+        raise NoCandidateError(
+            f"过滤后只剩 {len(kept)} 款，至少需要 3 款才能给出三档推荐"
+        )
 
     ranked = rank(engine, kept, features)
 
