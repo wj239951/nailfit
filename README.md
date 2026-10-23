@@ -66,11 +66,14 @@ nailfit/
 ├── scripts/
 │   ├── demo.py              # 命令行跑通全链路（无需起服务）
 │   ├── manual.py            # 手工录入 7 项手部特征 → 三张推荐卡
-│   └── validate_styles.py   # 款式库数据校验
-├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库
+│   ├── validate_styles.py   # 款式库数据校验
+│   └── prepare_images.py    # 款式图批量裁切 / 缩放 / 压缩（≤300KB）
+├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理
 ├── static/styles/           # 款式图片（按 style id 命名）
+├── static/demo/             # 演示图片（不入库、不进 git，仅工程演示）
 └── docs/
     ├── design.md            # 设计说明
+    ├── IMAGE_GUIDE.md       # 图片来源、选图标准与入库流程
     └── ROADMAP.md           # 剩余任务清单（M1–M23）
 ```
 
@@ -236,7 +239,25 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 
 ## 图片来源
 
-> 模板交付时请替换为可商用图片，并在页面标注「风格参考，非本手模拟效果」。
+正式款式库优先用**自拍 / 可商用图库**（Pexels、Unsplash 等）；小红书等平台截图只作本地演示参考，版权归原作者。
+完整规范（授权优先级、选图标准、裁剪压缩、免责声明）见 [docs/IMAGE_GUIDE.md](docs/IMAGE_GUIDE.md)。
+
+另有 10 张处理好的**演示图**在 `static/demo/`（来源为平台截图，仅工程演示：README 截图 / 前端占位 / 面试示意；**不登记进款式库、不进 git**）。映射表与逐张处理命令见 IMAGE_GUIDE 第 6 节。
+
+处理命令：
+
+```bash
+# 原图放 raw_images/ → 自动裁 3:4、压到 ≤300KB → 输出 static/styles/
+python scripts/prepare_images.py --src raw_images --out static/styles --prefix s --start 14
+
+# 截图类：先用 --box 框掉状态栏/评论区；宽图用 --fit pad 补边
+python scripts/prepare_images.py --src raw_images/0816.jpg --out static/styles/s014.jpg --box 0,400,1206,2008
+
+# 校验图片是否齐
+python scripts/validate_styles.py --check-images
+```
+
+> 页面需标注：**「风格参考，非本手模拟效果」**。若使用公开平台图片，请同时注明来源与非商用声明，并准备随时替换。
 
 ## License
 
