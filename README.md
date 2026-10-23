@@ -45,7 +45,8 @@ nailfit/
 ├── data/
 │   ├── taxonomy.yaml        # 特征枚举 + 打分权重 + 多样性约束
 │   ├── rules.yaml           # 匹配规则（改规则不改代码）
-│   └── styles.sample.json   # 款式库样例（13 条，替换成真实款式）
+│   ├── styles.sample.json   # 款式库样例（13 条，替换成真实款式）
+│   └── styles.demo.json     # 演示款式库（43 条，autotag 自动生成，仅演示）
 ├── core/
 │   ├── data.py              # YAML / JSON 加载（文件缺失/损坏时报清晰错误）
 │   ├── errors.py            # 统一异常：数据缺失 / 候选不足 / 契约失败
@@ -67,7 +68,8 @@ nailfit/
 │   ├── demo.py              # 命令行跑通全链路（无需起服务）
 │   ├── manual.py            # 手工录入 7 项手部特征 → 三张推荐卡
 │   ├── validate_styles.py   # 款式库数据校验
-│   └── prepare_images.py    # 款式图批量裁切 / 缩放 / 压缩（≤300KB）
+│   ├── prepare_images.py    # 款式图批量裁切 / 缩放 / 压缩（≤300KB）
+│   └── autotag.py           # 图片 → 结构化款式标签，生成演示款式库
 ├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理
 ├── static/styles/           # 款式图片（按 style id 命名）
 ├── static/demo/             # 演示图片（不入库、不进 git，仅工程演示）
@@ -89,6 +91,9 @@ pip install -r requirements.txt
 
 # 2. 命令行跑通（不需要启动服务、不需要 API Key）
 python scripts/demo.py
+
+# 2.1 用 43 条款式库跑（M7 演示库，图片对应 static/demo/）
+python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
 
 # 3. 跑测试
 pytest -q
@@ -168,6 +173,26 @@ python scripts/validate_styles.py --check-images
 python scripts/validate_styles.py --styles data/styles.json
 ```
 
+### 自动打标签（M7）
+
+M7 要的是“图片 → 结构化标签”。正式库人工复核前，先用 `scripts/autotag.py` 从演示图生成一份可跑的演示库：
+
+```bash
+# 从 static/demo 的 43 张图生成 data/styles.demo.json
+python scripts/autotag.py
+
+# 只看看会生成什么，不写文件
+python scripts/autotag.py --dry-run
+
+# 校验 + 确认图片都在
+python scripts/validate_styles.py --styles data/styles.demo.json --check-images
+
+# 用演示库跑推荐（4 个场景都能出三张卡）
+python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
+```
+
+颜色维度（hue / color_family / tone / value / saturation）从图片主色计算；形状、工艺、长度、场景从文件名关键词推测。想人工修正，把字段写进 `data/demo_labels.json`（id → 字段），再 `python scripts/autotag.py --overrides data/demo_labels.json`。
+
 ---
 
 ## API
@@ -230,6 +255,8 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 | `scene` | 适用场景 |
 | `hue` | 色相角（0–360），用于三档去重 |
 | `tags` | 自由标签（显白/通勤/温柔…） |
+
+`data/styles.demo.json` 是同一 schema 的 43 条演示库（`autotag` 生成，额外带 `autotag: true` 与 `name`，图片指向 `static/demo/`），只用于工程演示；正式库仍为 `data/styles.json`。
 
 ## 评测（TODO）
 

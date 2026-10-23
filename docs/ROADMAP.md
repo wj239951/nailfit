@@ -1,7 +1,7 @@
 # NailFit 剩余任务清单（Roadmap）
 
-> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ M5 说明 + M6 图片工具与 43 张演示图已完成，本地再提交一次（不 push）
-> 已完成：项目骨架、规则引擎（15 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明已写、M6 工具 + 43 张演示图就绪**（测试 60 个）
+> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `c4a8177`（M5 说明 + M6 工具与 43 张演示图）；M7 演示库（autotag，43 条）已就绪，本地再提交一次（不 push）
+> 已完成：项目骨架、规则引擎（15 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**（测试 80 个）
 > 原则：**规则决定推荐什么，模型只决定怎么说；不生成图片，只从款式库挑图。**
 
 ---
@@ -23,7 +23,7 @@
 |---|---|---|---|---|
 | M5 | 确定图片来源与授权 | `docs/IMAGE_GUIDE.md` | 自拍 / 可商用图库 / 网络图（需在 README 写明） | ✅ 已完成（含演示图映射，来源待正式确认） |
 | M6 | 收集 200 条款式图 | `static/styles/<id>.jpg` | 统一角度与背景，单张 ≤ 300 KB | 🔄 工具 + 43 张演示图就绪（`static/demo/`，仅演示、不进 git），正式库待原图 |
-| M7 | 打标签并录入 | `data/styles.json` | 字段见 `data/styles.sample.json`，用 `scripts/validate_styles.py` 校验 | ⬜ 待开始 |
+| M7 | 打标签并录入 | `data/styles.demo.json`（演示）/ `data/styles.json`（正式） | 字段见 `data/styles.sample.json`，用 `scripts/validate_styles.py` 校验 | 🔄 演示库已自动生成（43 条，`scripts/autotag.py`，校验+图片检查通过）；正式库待人工复核 |
 | M8 | 提供 3–5 张真实手照 | 图片文件 | 用于规则校准，可脱敏（只要手部） | ⬜ 待开始 |
 
 > M6 快速流程：原图放 `raw_images/` → `prepare_images.py` 自动裁 3:4、压到 ≤300KB → `validate_styles.py --check-images` 校验。截图类先用 `--box x1,y1,x2,y2` 框掉状态栏/评论区，宽图用 `--fit pad` 补边。
@@ -80,7 +80,7 @@ M20/M21 依赖 M1 或 M14（要有可演示入口）
 | 天 | 做什么 |
 |---|---|
 | D1 | M1 + M2（手工录入 CLI + 数据校验脚本）——✅ 已完成 |
-| D2–D3 | M5–M6（图片说明 + 图片工具 + 演示图已就绪）；M7 打标签等你出图 |
+| D2–D3 | M5–M7（图片说明 + 图片工具 + 43 张演示图 + autotag 演示库已就绪）；正式款式库等你出图 |
 | D4 | M14（极简前端） |
 | D5 | M8 + M9（手照 + 视觉层） |
 | 周末 | M20/M21（截图 + 演示视频） |

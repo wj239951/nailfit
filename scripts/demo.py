@@ -4,6 +4,7 @@
     python scripts/demo.py --scenario deep_festival
     python scripts/demo.py --llm           # 有 DEEPSEEK_API_KEY 时走云端
     python scripts/demo.py --json          # 输出原始 JSON
+    python scripts/demo.py --styles data/styles.demo.json   # 用演示款式库跑
 
 出错时打印一行清晰的中文原因并以退出码 2 结束（不打印 traceback）。
 """
@@ -19,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from core.data import load_styles  # noqa: E402
 from core.errors import NailFitError  # noqa: E402
 from core.features import FeatureError, HandFeatures  # noqa: E402
 from core.pipeline import recommend  # noqa: E402
@@ -99,11 +101,13 @@ def main() -> int:
     parser.add_argument("--scenario", default="short_wide_warm", choices=sorted(SCENARIOS))
     parser.add_argument("--llm", action="store_true", help="有 DEEPSEEK_API_KEY 时调用云端生成理由")
     parser.add_argument("--json", action="store_true", help="输出原始 JSON")
+    parser.add_argument("--styles", default=None, help="款式库 JSON（默认 data/styles.sample.json）")
     args = parser.parse_args()
 
     try:
         features = HandFeatures.from_dict(SCENARIOS[args.scenario])
-        payload = recommend(features, use_llm=args.llm)
+        styles = load_styles(args.styles) if args.styles else None
+        payload = recommend(features, styles=styles, use_llm=args.llm)
     except (FeatureError, ContractError, NailFitError) as exc:
         print(f"✗ 推荐失败：{exc}", file=sys.stderr)
         return 2

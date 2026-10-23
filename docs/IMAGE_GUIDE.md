@@ -130,3 +130,5 @@ python scripts/prepare_images.py --src raw_images/9524_sheer_nude.jpg ^
 python scripts/prepare_images.py --src raw_images/0103_flower_stone_nude.jpg ^
   --out static/demo/demo17_flower_stone_nude.jpg --box 0,505,1206,2113
 ```
+
+**演示库（M7）：** 这 43 张演示图对应 `data/styles.demo.json`（`scripts/autotag.py` 从 `static/demo/` 自动生成，颜色维度算自图片、形状/工艺/长度/场景按文件名推断；`python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool` 可跑通三张卡）。演示库**只用于工程演示**：不替代正式 `data/styles.json`，也不参与 git（图片目录 `static/demo/` 已 gitignore）。

@@ -1,0 +1,1260 @@
+{
+  "version": 1,
+  "note": "演示款式库：scripts/autotag.py 从 static/demo 自动生成，仅供工程演示；正式库请替换为自拍/可商用图片并人工复核标签。",
+  "styles": [
+    {
+      "id": "d001",
+      "name": "裸粉 · 法式椭圆",
+      "image": "static/demo/demo01_nude_french.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "french",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "commute",
+        "wedding",
+        "date"
+      ],
+      "hue": 25.7,
+      "tags": [
+        "显白",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d002",
+      "name": "裸粉 · 手绘椭圆",
+      "image": "static/demo/demo02_nude_polka_bow.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "drawing",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "commute",
+        "date"
+      ],
+      "hue": 21.4,
+      "tags": [
+        "显白",
+        "通勤",
+        "甜美"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d003",
+      "name": "裸粉 · 纯色椭圆",
+      "image": "static/demo/demo03_sheer_nude.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "low",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "commute",
+        "date"
+      ],
+      "hue": 36.0,
+      "tags": [
+        "显白",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d004",
+      "name": "蓝绿 · 纯色椭圆",
+      "image": "static/demo/demo04_olive_green.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 18.4,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d005",
+      "name": "暖棕 · 闪粉椭圆",
+      "image": "static/demo/demo05_sheer_star.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "orange_brown",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 16.1,
+      "tags": [
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d006",
+      "name": "裸粉 · 渐变椭圆",
+      "image": "static/demo/demo06_pink_gradient.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "gradient",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "commute",
+        "date"
+      ],
+      "hue": 17.5,
+      "tags": [
+        "显白",
+        "温柔",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d007",
+      "name": "暖棕 · 猫眼椭圆",
+      "image": "static/demo/demo07_brown_cateye.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "orange_brown",
+      "tone": "neutral",
+      "value": "deep",
+      "saturation": "low",
+      "style": "cat_eye",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "commute",
+        "cool"
+      ],
+      "hue": 312.0,
+      "tags": [
+        "通勤",
+        "酷感",
+        "显贵"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d008",
+      "name": "正红 · 纯色椭圆",
+      "image": "static/demo/demo08_yellow_daisy.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "true_red",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 12.6,
+      "tags": [
+        "显白"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d009",
+      "name": "闪片 · 闪粉椭圆",
+      "image": "static/demo/demo09_glitter_cartoon.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "glitter",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 33.1,
+      "tags": [
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d010",
+      "name": "裸粉 · 法式椭圆",
+      "image": "static/demo/demo10_nude_french_dots.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "french",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "commute",
+        "wedding",
+        "date"
+      ],
+      "hue": 28.5,
+      "tags": [
+        "显白",
+        "温柔",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d011",
+      "name": "蓝绿 · 闪粉长杏仁",
+      "image": "static/demo/demo11_blue_almond_stars.jpg",
+      "shape": [
+        "almond",
+        "oval"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival",
+        "y2k"
+      ],
+      "hue": 17.1,
+      "tags": [
+        "清新",
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d012",
+      "name": "闪片 · 闪粉椭圆",
+      "image": "static/demo/demo12_sheer_glitter_heart.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "glitter",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 20.6,
+      "tags": [
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d013",
+      "name": "蓝绿 · 闪粉椭圆",
+      "image": "static/demo/demo13_blue_star_satin.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival",
+        "y2k"
+      ],
+      "hue": 16.5,
+      "tags": [
+        "清新",
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d014",
+      "name": "闪片 · 闪粉椭圆",
+      "image": "static/demo/demo14_glitter_lines_nude.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "glitter",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 26.0,
+      "tags": [
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d015",
+      "name": "裸粉 · 闪粉椭圆",
+      "image": "static/demo/demo15_bow_star_nude.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "festival"
+      ],
+      "hue": 29.0,
+      "tags": [
+        "显白",
+        "温柔",
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d016",
+      "name": "闪片 · 闪粉椭圆",
+      "image": "static/demo/demo16_glitter_checker.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "glitter",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "low",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 31.6,
+      "tags": [
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d017",
+      "name": "裸粉 · 手绘椭圆",
+      "image": "static/demo/demo17_flower_stone_nude.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "drawing",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "commute",
+        "date"
+      ],
+      "hue": 9.2,
+      "tags": [
+        "显白",
+        "温柔",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d018",
+      "name": "闪片 · 闪粉椭圆",
+      "image": "static/demo/demo18_glitter_ombre_nude.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "glitter",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 13.3,
+      "tags": [
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d019",
+      "name": "黑白 · 手绘椭圆",
+      "image": "static/demo/demo19_white_lace_long.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "mono",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "drawing",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date"
+      ],
+      "hue": 6.3,
+      "tags": [
+        "甜美"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d020",
+      "name": "暖棕 · 法式椭圆",
+      "image": "static/demo/demo20_french_bow_long.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "orange_brown",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "low",
+      "style": "french",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "commute",
+        "wedding"
+      ],
+      "hue": 32.3,
+      "tags": [
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d021",
+      "name": "暖棕 · 手绘椭圆",
+      "image": "static/demo/demo21_brown_velvet_floral.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "orange_brown",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "drawing",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "commute",
+        "date"
+      ],
+      "hue": 20.3,
+      "tags": [
+        "通勤",
+        "甜美"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d022",
+      "name": "裸粉 · 纯色椭圆",
+      "image": "static/demo/demo22_nude_beige_oval.jpg",
+      "shape": [
+        "oval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "cool",
+      "value": "deep",
+      "saturation": "low",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "commute",
+        "date"
+      ],
+      "hue": 150.0,
+      "tags": [
+        "显白",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d023",
+      "name": "暖棕 · 混搭椭圆",
+      "image": "static/demo/demo23_brown_cream_two_tone.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "orange_brown",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "mixed",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "commute",
+        "y2k"
+      ],
+      "hue": 25.0,
+      "tags": [
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d024",
+      "name": "裸粉 · 纯色椭圆",
+      "image": "static/demo/demo24_pink_sheer_squoval.jpg",
+      "shape": [
+        "oval",
+        "almond"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "commute",
+        "date"
+      ],
+      "hue": 20.7,
+      "tags": [
+        "显白",
+        "温柔",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d025",
+      "name": "蓝绿 · 纯色椭圆",
+      "image": "static/demo/demo25_pastel_pink_blue.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 11.0,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d026",
+      "name": "暖棕 · 纯色短方",
+      "image": "static/demo/demo26_cream_taupe_square.jpg",
+      "shape": [
+        "square",
+        "squoval"
+      ],
+      "color_family": "orange_brown",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "solid",
+      "length_fit": "short",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide",
+        "slender"
+      ],
+      "scene": [
+        "commute"
+      ],
+      "hue": 21.2,
+      "tags": [
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d027",
+      "name": "蓝绿 · 纯色短方",
+      "image": "static/demo/demo27_sage_olive_square.jpg",
+      "shape": [
+        "square",
+        "squoval"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "solid",
+      "length_fit": "short",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide",
+        "slender"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 330.0,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d028",
+      "name": "正红 · 纯色短方",
+      "image": "static/demo/demo28_dark_red_cream_square.jpg",
+      "shape": [
+        "square",
+        "squoval"
+      ],
+      "color_family": "true_red",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "solid",
+      "length_fit": "short",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 16.4,
+      "tags": [
+        "显白"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d029",
+      "name": "蓝绿 · 手绘椭圆",
+      "image": "static/demo/demo29_blue_doodle_long.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "drawing",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "y2k"
+      ],
+      "hue": 18.8,
+      "tags": [
+        "清新",
+        "甜美"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d030",
+      "name": "蓝绿 · 混搭椭圆",
+      "image": "static/demo/demo30_blue_white_cool.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "cool",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "mixed",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 30.9,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d031",
+      "name": "蓝绿 · 纯色椭圆",
+      "image": "static/demo/demo31_dusty_blue_long.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "cool",
+      "value": "deep",
+      "saturation": "low",
+      "style": "solid",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 213.8,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d032",
+      "name": "浆果紫 · 猫眼短方",
+      "image": "static/demo/demo32_mauve_cateye_square.jpg",
+      "shape": [
+        "square",
+        "squoval"
+      ],
+      "color_family": "berry",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "cat_eye",
+      "length_fit": "short",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "cool"
+      ],
+      "hue": 23.2,
+      "tags": [
+        "气质",
+        "酷感"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d033",
+      "name": "裸粉 · 法式短圆",
+      "image": "static/demo/demo33_nude_french_round.jpg",
+      "shape": [
+        "round",
+        "oval"
+      ],
+      "color_family": "nude_pink",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "french",
+      "length_fit": "short",
+      "nail_bed_fit": [
+        "standard",
+        "short_wide",
+        "slender"
+      ],
+      "scene": [
+        "commute",
+        "wedding",
+        "date"
+      ],
+      "hue": 22.3,
+      "tags": [
+        "显白",
+        "温柔",
+        "通勤"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d034",
+      "name": "浆果紫 · 闪粉椭圆",
+      "image": "static/demo/demo34_mauve_star_glitter.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "berry",
+      "tone": "warm",
+      "value": "mid",
+      "saturation": "mid",
+      "style": "glitter",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "festival",
+        "cool"
+      ],
+      "hue": 24.5,
+      "tags": [
+        "气质",
+        "酷感",
+        "梦幻"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d035",
+      "name": "蓝绿 · 猫眼长杏仁",
+      "image": "static/demo/demo35_navy_cateye_almond.jpg",
+      "shape": [
+        "almond",
+        "oval"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "deep",
+      "saturation": "mid",
+      "style": "cat_eye",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "cool",
+        "y2k"
+      ],
+      "hue": 36.9,
+      "tags": [
+        "清新",
+        "酷感"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d036",
+      "name": "蓝绿 · 金属椭圆",
+      "image": "static/demo/demo36_light_blue_metal.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "chrome",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 22.5,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d037",
+      "name": "浆果紫 · 猫眼长杏仁",
+      "image": "static/demo/demo37_plum_cateye_almond.jpg",
+      "shape": [
+        "almond",
+        "oval"
+      ],
+      "color_family": "berry",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "cat_eye",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "cool"
+      ],
+      "hue": 30.8,
+      "tags": [
+        "气质",
+        "酷感"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d038",
+      "name": "浆果紫 · 猫眼长杏仁",
+      "image": "static/demo/demo38_berry_cateye_almond.jpg",
+      "shape": [
+        "almond",
+        "oval"
+      ],
+      "color_family": "berry",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "cat_eye",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "cool"
+      ],
+      "hue": 23.0,
+      "tags": [
+        "气质",
+        "酷感"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d039",
+      "name": "蓝绿 · 猫眼长杏仁",
+      "image": "static/demo/demo39_olive_cateye_almond.jpg",
+      "shape": [
+        "almond",
+        "oval"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "cat_eye",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 37.9,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d040",
+      "name": "浆果紫 · 猫眼椭圆",
+      "image": "static/demo/demo40_greige_lilac_cateye.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "berry",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "mid",
+      "style": "cat_eye",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "cool"
+      ],
+      "hue": 29.3,
+      "tags": [
+        "气质",
+        "酷感"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d041",
+      "name": "浆果紫 · 纯色长杏仁",
+      "image": "static/demo/demo41_lilac_cream_almond.jpg",
+      "shape": [
+        "almond",
+        "oval"
+      ],
+      "color_family": "berry",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "date",
+        "cool"
+      ],
+      "hue": 8.1,
+      "tags": [
+        "气质",
+        "酷感"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d042",
+      "name": "蓝绿 · 金属椭圆",
+      "image": "static/demo/demo42_gold_green_metallic.jpg",
+      "shape": [
+        "oval",
+        "squoval",
+        "almond"
+      ],
+      "color_family": "blue_green",
+      "tone": "warm",
+      "value": "light",
+      "saturation": "low",
+      "style": "chrome",
+      "length_fit": "long",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "y2k"
+      ],
+      "hue": 24.7,
+      "tags": [
+        "清新"
+      ],
+      "autotag": true
+    },
+    {
+      "id": "d043",
+      "name": "正红 · 纯色长杏仁",
+      "image": "static/demo/demo43_red_gloss_almond.jpg",
+      "shape": [
+        "almond",
+        "oval"
+      ],
+      "color_family": "true_red",
+      "tone": "warm",
+      "value": "deep",
+      "saturation": "mid",
+      "style": "solid",
+      "length_fit": "mid",
+      "nail_bed_fit": [
+        "standard",
+        "slender"
+      ],
+      "scene": [
+        "festival"
+      ],
+      "hue": 36.7,
+      "tags": [
+        "显白"
+      ],
+      "autotag": true
+    }
+  ]
+}
