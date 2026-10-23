@@ -39,6 +39,7 @@ models/
 # 临时/探测文件
 _tmp_pytest/
 tests/_scratch_*/
+tests/_tmp_data/
 tests/_autotag_tmp/
 tests/_img_tmp/
 tests/_tmp_eval/

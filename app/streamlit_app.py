@@ -232,6 +232,17 @@ def render_vision_sidebar() -> None:
 
     render_library_select()
 
+    st.text_input(
+        "自由描述（可选）",
+        placeholder="比如：想显白一点、不要太夸张、婚礼要拍手",
+        key="free_text",
+    )
+    st.checkbox(
+        "用大模型生成理由（需在 .env 配好 DEEPSEEK_API_KEY）",
+        value=False,
+        key="use_llm",
+    )
+
     uploaded = st.file_uploader("上传手照", type=["jpg", "jpeg", "png"], key="vision_upload")
     if uploaded is not None and uploaded.name != st.session_state.get("vision_upload_name"):
         path = _save_upload(uploaded)

@@ -19,6 +19,17 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 
 
+def _resolve(path: str | Path) -> Path:
+    """相对路径按项目根目录解析，保证从任意工作目录调用都能找到数据。
+
+    之前直接 `Path(path)`：从项目外层目录调用（README 的
+    `python -m api.main`、UI 传 `data/styles.demo.json`）时会按 CWD 找文件，
+    报“款式库文件不存在”，属于环境相关的隐蔽 bug。
+    """
+    p = Path(path)
+    return p if p.is_absolute() else ROOT / p
+
+
 def _read_yaml(path: Path, label: str) -> dict:
     if not path.exists():
         raise DataFormatError(f"{label}不存在：{path}")
@@ -35,19 +46,19 @@ def _read_yaml(path: Path, label: str) -> dict:
 
 @lru_cache(maxsize=4)
 def load_taxonomy(path: str | None = None) -> dict:
-    p = Path(path) if path else DATA_DIR / "taxonomy.yaml"
+    p = _resolve(path) if path else DATA_DIR / "taxonomy.yaml"
     return _read_yaml(p, "taxonomy 数据文件")
 
 
 @lru_cache(maxsize=4)
 def load_rules(path: str | None = None) -> dict:
-    p = Path(path) if path else DATA_DIR / "rules.yaml"
+    p = _resolve(path) if path else DATA_DIR / "rules.yaml"
     return _read_yaml(p, "rules 数据文件")
 
 
 @lru_cache(maxsize=4)
 def load_styles(path: str | None = None) -> tuple[dict, ...]:
-    p = Path(path) if path else DATA_DIR / "styles.sample.json"
+    p = _resolve(path) if path else DATA_DIR / "styles.sample.json"
     if not p.exists():
         raise DataFormatError(f"款式库文件不存在：{p}")
     try:
@@ -63,6 +74,23 @@ def load_styles(path: str | None = None) -> tuple[dict, ...]:
         )
     if not styles:
         raise EmptyStyleLibraryError(f"款式库为空：{p} 里没有款式，请先录入款式数据")
+
+    # 逐条做最小校验：坏条目直接报 DataFormatError（API 映射 503），
+    # 而不是等到规则引擎里 KeyError → 500。
+    seen_ids: set[str] = set()
+    for index, style in enumerate(styles, start=1):
+        if not isinstance(style, dict):
+            raise DataFormatError(
+                f"款式库格式错误：第 {index} 条不是对象（{p}）"
+            )
+        style_id = style.get("id")
+        if not isinstance(style_id, str) or not style_id.strip():
+            raise DataFormatError(
+                f"款式库格式错误：第 {index} 条缺少非空字符串 id（{p}）"
+            )
+        if style_id in seen_ids:
+            raise DataFormatError(f"款式库 id 重复：{style_id}（{p}）")
+        seen_ids.add(style_id)
     return tuple(styles)
 
 

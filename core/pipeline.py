@@ -43,6 +43,9 @@ def recommend(
 ) -> dict:
     taxonomy = load_taxonomy()
     engine = engine or RuleEngine(taxonomy)
+    if not isinstance(features, HandFeatures):
+        raise FeatureError("features 必须是 HandFeatures 实例")
+    features.validate()  # 直接构造的非法特征（如 nail_shape="triangle"）在这里拦下
     styles = list(styles if styles is not None else load_styles())
     if not styles:
         raise EmptyStyleLibraryError("款式库为空：请先在 data/styles.sample.json 录入款式")
@@ -76,6 +79,13 @@ def recommend(
             ranked = sorted(boosted, key=lambda x: (-x.score, x.style["id"]))
 
     picks = pick_three(ranked, taxonomy, features)
+    if len(picks) < 3:
+        # pick_three 会按色系去重，库里同色系太多时会凑不满 3 款。
+        # 这种情况不是“契约 bug”，而是候选不足，应走 422 让用户补库/放宽条件。
+        raise NoCandidateError(
+            f"可用色系不足：过滤后只剩 {len(picks)} 个不同色系的款式，凑不满三档推荐；"
+            "请给款式库补几个其它色系，或放宽场景/甲长限制"
+        )
     max_score = engine.max_score(engine.match(features))
     explanations = explain(
         features,
@@ -96,7 +106,11 @@ def recommend(
         reason = (text.get("reason") or "").strip() or "；".join(pick.reasons[:2]) or "与你的特征匹配"
         tier = _tier(pick.style, taxonomy)
         if tier in used_tiers:
-            tier = "fill"
+            # 同一档位重复时退到不重复的补充档，避免两张卡都叫“补充款”
+            tier = next(
+                (name for name in ("fill", "extra") if name not in used_tiers),
+                "extra",
+            )
         used_tiers.add(tier)
         cards.append(
             {
@@ -148,6 +162,7 @@ def features_from_image(
     """
     from . import vision  # 延迟导入：mediapipe / opencv 是可选依赖
 
+    taxonomy_features = list(load_taxonomy()["features"])
     result = vision.extract(
         image_path,
         model_path=model_path,
@@ -157,8 +172,13 @@ def features_from_image(
     payload: dict[str, str] = dict(result.features)
     for field in result.unreliable:
         payload.pop(field, None)
+    # 只接受 taxonomy 里声明的 7 个特征字段：前端可能把 ita_degrees 之类的
+    # 派生指标一起传回来，直接塞进 HandFeatures.from_dict 会报“未知特征字段”。
+    allowed_features = set(taxonomy_features)
     for key, value in (overrides or {}).items():
-        payload[str(key)] = str(value)  # 人工修正优先于视觉结果
+        key = str(key)
+        if key in allowed_features:
+            payload[key] = str(value)  # 人工修正优先于视觉结果
     payload["scene"] = scene
     if "ita_degrees" in result.metrics:
         payload["ita_degrees"] = round(float(result.metrics["ita_degrees"]), 1)

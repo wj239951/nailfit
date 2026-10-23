@@ -225,7 +225,7 @@ def _template(
         avoid.append(text)
         if len(avoid) >= 2:
             break
-    if features.length == "very_short":
+    if features.length == "very_short" and len(avoid) < MAX_AVOID_ITEMS:
         avoid.append("甲长偏短时，手绘与贴钻容易显得拥挤，建议先养甲")
     return {"recommendations": recs, "avoid": avoid}
 

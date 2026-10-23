@@ -39,5 +39,20 @@ def test_app_runs_recommendation() -> None:
     assert "稳妥" in text or "亮点" in text or "大胆" in text
 
 
+def test_vision_mode_renders_controls() -> None:
+    """手照模式要有：场景/款式库下拉、上传框、自由描述、LLM 开关。"""
+    at = _app()
+    at.run()
+    at.radio[0].set_value("手照识别").run()
+
+    assert not at.exception
+    labels = [s.label for s in at.selectbox]
+    assert "使用场景" in labels
+    assert "款式库" in labels
+    assert len(at.get("file_uploader")) == 1
+    assert any(c.label.startswith("用大模型") for c in at.checkbox)
+    assert any(t.label.startswith("自由描述") for t in at.text_input)
+
+
 if __name__ == "__main__":  # pragma: no cover
     sys.exit(pytest.main([__file__, "-v"]))

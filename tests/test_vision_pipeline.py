@@ -182,3 +182,14 @@ def test_api_recommend_from_image_422_for_bad_photo(client, fake_extract):
 
     assert response.status_code == 422
     assert "手照信息不足" in response.json()["detail"]
+
+
+def test_features_from_image_ignores_unknown_overrides(fake_extract):
+    """前端可能把 ita_degrees 等派生字段当修正回传，不能塞进 HandFeatures。"""
+    fake_extract(make_result())
+    payload, _ = features_from_image(
+        "fake_hand.jpg", overrides={"ita_degrees": "88", "bogus": "x"}
+    )
+
+    assert payload["ita_degrees"] == 41.2  # 仍用视觉指标，不被覆盖
+    assert "bogus" not in payload

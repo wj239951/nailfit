@@ -206,3 +206,16 @@ def test_retry_error_keeps_first_partial_result(monkeypatch):
 def test_pipeline_meta_always_has_explainer():
     payload = recommend(FEATURES, use_llm=False)
     assert payload["meta"]["explainer"]["mode"] == "template"
+
+
+def test_template_avoid_never_exceeds_limit():
+    """very_short 的附加建议不能把避雷条目顶到 3 条（与 LLM 路径限量一致）。"""
+    from core.explainer import _template
+
+    very_short = HandFeatures.from_dict({**SCENARIOS["short_wide_warm"], "length": "very_short"})
+    avoided = [
+        {"style_id": "a", "name": "A", "reason": "甲长不够会显笨"},
+        {"style_id": "b", "name": "B", "reason": "亮片不适合日常"},
+    ]
+    template = _template(very_short, [], avoided)
+    assert len(template["avoid"]) <= 2

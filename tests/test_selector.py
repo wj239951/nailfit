@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import pytest
+
+from core import pipeline as pipeline_module
+from core.errors import NoCandidateError
 from core.features import HandFeatures
 from core.pipeline import recommend
 
@@ -70,3 +74,16 @@ def test_relaxed_fallback_keeps_families_distinct() -> None:
     assert len(chosen) == 3
     families = [item.style["color_family"] for item in chosen]
     assert len(set(families)) == 3, f"色系重复：{families}"
+
+
+def test_recommend_raises_no_candidate_when_picks_short(monkeypatch) -> None:
+    """库里同色系太多时会凑不满三档：应是 NoCandidateError（API 422），
+
+    不能落到 validate_cards 的 ContractError（API 502，用户以为是服务坏了）。
+    """
+
+    monkeypatch.setattr(
+        pipeline_module, "pick_three", lambda ranked, taxonomy, features: ranked[:1]
+    )
+    with pytest.raises(NoCandidateError, match="色系"):
+        recommend(HandFeatures.from_dict(SHORT_WIDE_WARM), use_llm=False)
