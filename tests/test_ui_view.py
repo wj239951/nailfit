@@ -18,6 +18,7 @@ from core.presets import SCENE_LABELS, SCENARIOS, scene_options  # noqa: E402
 from core.ui_view import (  # noqa: E402
     build_features,
     card_view,
+    default_library_label,
     feature_summary,
     generate,
     image_file,
@@ -88,6 +89,24 @@ def test_library_choices_point_to_existing_files() -> None:
     assert choices, "至少要有一个可用款式库"
     for path in choices.values():
         assert (ROOT / path).exists(), path
+
+
+def test_library_labels_carry_actual_counts() -> None:
+    """库标签带实际条数；默认库优先选带演示图的演示库（回归：图片不显示）。"""
+    choices = dict(library_choices())
+    assert choices, "至少要有一个可用款式库"
+    assert all("条" in label for label in choices)
+    demo_label = default_library_label()
+    assert demo_label and "演示库" in demo_label
+    assert choices[demo_label].endswith("styles.demo.json")
+
+
+def test_demo_library_cards_have_images() -> None:
+    """演示库的推荐卡片必须有可展示的图片（样例库才是占位图）。"""
+    payload = generate(SCENARIOS["slender_cool"], styles_path="data/styles.demo.json", use_llm=False)
+    views = [card_view(card) for card in payload["recommendations"]]
+    assert len(views) == 3
+    assert all(view["image"] is not None for view in views)
 
 
 def test_image_file_handles_missing() -> None:

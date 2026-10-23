@@ -46,6 +46,7 @@ from core.presets import (  # noqa: E402
 from core.ui_view import (  # noqa: E402
     avoid_tips,
     card_view,
+    default_library_label,
     generate,
     library_choices,
     payload_json,
@@ -72,7 +73,10 @@ def _init_state() -> None:
     st.session_state.setdefault("payload", None)
     st.session_state.setdefault("error", None)
     st.session_state.setdefault("preset", CUSTOM_PRESET)
-    st.session_state.setdefault("lib_label", LIBRARIES[0][0] if LIBRARIES else "")
+    library_labels = [label for label, _ in LIBRARIES]
+    if st.session_state.get("lib_label") not in library_labels:
+        # 首次进入，或库的标签文案变了（条数会变），重置为默认库（优先演示库）
+        st.session_state["lib_label"] = default_library_label()
     st.session_state.setdefault("input_mode", MODE_MANUAL)
     st.session_state.setdefault("vision_payload", None)
     st.session_state.setdefault("vision_meta", None)
@@ -106,6 +110,18 @@ def _selection() -> dict[str, str]:
 
 def _styles_path() -> str | None:
     return dict(LIBRARIES).get(st.session_state.get("lib_label") or "")
+
+
+def render_library_select() -> None:
+    """「款式库」下拉：两种输入模式共用（手照模式也能切到演示库看真实图片）。"""
+    if len(LIBRARIES) <= 1:
+        return
+    st.selectbox(
+        "款式库",
+        [label for label, _ in LIBRARIES],
+        key="lib_label",
+        help="样例库只用来看流程（图片是占位图）；演示库带演示图，推荐卡片能显示真实图片",
+    )
 
 
 def _run() -> None:
@@ -213,6 +229,8 @@ def render_vision_sidebar() -> None:
         key="vision_scene",
         help="场景从手照里推断不出来，需要手动选",
     )
+
+    render_library_select()
 
     uploaded = st.file_uploader("上传手照", type=["jpg", "jpeg", "png"], key="vision_upload")
     if uploaded is not None and uploaded.name != st.session_state.get("vision_upload_name"):
@@ -343,13 +361,7 @@ def render_sidebar() -> None:
             key="use_llm",
         )
 
-        if len(LIBRARIES) > 1:
-            st.selectbox(
-                "款式库",
-                [item[0] for item in LIBRARIES],
-                key="lib_label",
-                help="样例库用于快速验证流程；演示库带 43 张演示图",
-            )
+        render_library_select()
 
         col_run, col_reset = st.columns(2)
         col_run.button("开始推荐", type="primary", on_click=_run, use_container_width=True)

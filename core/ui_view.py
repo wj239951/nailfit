@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .data import load_taxonomy
+from .data import load_styles, load_taxonomy
 from .features import FeatureError, HandFeatures
 from .labels import summarize
 from .pipeline import recommend
@@ -25,14 +25,36 @@ TIER_LABELS: dict[str, str] = {
 }
 
 LIBRARY_CHOICES: list[tuple[str, str]] = [
-    ("样例库（13 条，占位图）", "data/styles.sample.json"),
-    ("演示库（43 条，带演示图）", "data/styles.demo.json"),
+    ("样例库（占位图）", "data/styles.sample.json"),
+    ("演示库（带演示图）", "data/styles.demo.json"),
 ]
 
 
 def library_choices() -> list[tuple[str, str]]:
-    """只返回磁盘上确实存在的款式库，避免前端选到缺失文件。"""
-    return [(label, path) for label, path in LIBRARY_CHOICES if (ROOT / path).exists()]
+    """只返回磁盘上确实存在的款式库，避免前端选到缺失文件。
+
+    标签里带上实际条数，加款式/换库后不用手改文案。
+    """
+    choices: list[tuple[str, str]] = []
+    for label, path in LIBRARY_CHOICES:
+        if not (ROOT / path).exists():
+            continue
+        try:
+            count = len(load_styles(path))
+        except Exception:  # noqa: BLE001 - 坏库文件不阻塞页面，交给校验脚本报错
+            choices.append((label, path))
+            continue
+        choices.append((f"{label[:-1]}，{count} 条）", path))
+    return choices
+
+
+def default_library_label() -> str:
+    """默认选带演示图的演示库（演示时卡片能直接显示图片），没有则退回第一个可用库。"""
+    choices = library_choices()
+    for label, path in choices:
+        if path.endswith("styles.demo.json"):
+            return label
+    return choices[0][0] if choices else ""
 
 
 def tier_label(tier: str | None) -> str:
