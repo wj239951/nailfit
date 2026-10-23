@@ -1,7 +1,7 @@
 # NailFit 剩余任务清单（Roadmap）
 
-> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `c4a8177`（M5 说明 + M6 工具与 43 张演示图）；M7 演示库（autotag，43 条）已就绪，本地再提交一次（不 push）
-> 已完成：项目骨架、规则引擎（15 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**（测试 80 个）
+> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `10f640e`（M5 说明 + M6 工具 + 43 张演示图 + M7 演示库）；**本提交新增 M14 Streamlit 前端**，测试 91 个全绿
+> 已完成：项目骨架、规则引擎（15 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**；**M14 Streamlit 单页（`app/streamlit_app.py`）完成**（测试 91 个）
 > 原则：**规则决定推荐什么，模型只决定怎么说；不生成图片，只从款式库挑图。**
 
 ---
@@ -42,7 +42,7 @@
 
 | ID | 任务 | 产出 | 验收标准 |
 |---|---|---|---|
-| M14 | 极简单页 | `web/index.html` | 上传/选参数 → 三卡（图 + 理由 + 命中规则） |
+| M14 | 极简单页 | `web/index.html` | 上传/选参数 → 三卡（图 + 理由 + 命中规则） ✅ 已完成（Streamlit 版 `app/streamlit_app.py`，支持 7 项特征 + 场景预设 + 样例库/演示库切换） |
 | M15 | 或 Vue3 版本 | `frontend/` | 与 llmops-frontend 风格统一（2–3 天） |
 | M16 | 联调 | 配置 | CORS 通过，端到端可用 |
 
@@ -81,7 +81,7 @@ M20/M21 依赖 M1 或 M14（要有可演示入口）
 |---|---|
 | D1 | M1 + M2（手工录入 CLI + 数据校验脚本）——✅ 已完成 |
 | D2–D3 | M5–M7（图片说明 + 图片工具 + 43 张演示图 + autotag 演示库已就绪）；正式款式库等你出图 |
-| D4 | M14（极简前端） |
+| D4 | M14（极简前端）——✅ 已完成（Streamlit 版 `app/streamlit_app.py`，测试 `tests/test_frontend.py`） |
 | D5 | M8 + M9（手照 + 视觉层） |
 | 周末 | M20/M21（截图 + 演示视频） |
 

@@ -13,3 +13,7 @@ Pillow>=10.0
 
 # --- 可选：语义检索加权（不装也能跑，自动降级为纯规则打分）---
 # chromadb>=0.5
+
+# --- 可选：Streamlit 前端（见 requirements-frontend.txt）---
+# pip install -r requirements-frontend.txt
+# streamlit run app/streamlit_app.py

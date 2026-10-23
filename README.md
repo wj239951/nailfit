@@ -64,6 +64,8 @@ nailfit/
 │   ├── main.py              # FastAPI 入口
 │   ├── routes.py            # /api/recommend /api/styles
 │   └── schemas.py           # 请求/响应模型
+├── app/
+│   └── streamlit_app.py     # Streamlit 网页前端（可选依赖，见 requirements-frontend.txt）
 ├── scripts/
 │   ├── demo.py              # 命令行跑通全链路（无需起服务）
 │   ├── manual.py            # 手工录入 7 项手部特征 → 三张推荐卡
@@ -101,6 +103,11 @@ pytest -q
 # 4. 启动 API
 uvicorn api.main:app --reload --port 8000
 # Swagger: http://127.0.0.1:8000/docs
+
+# 5. 网页前端（可选，Streamlit）
+pip install -r requirements-frontend.txt
+streamlit run app/streamlit_app.py
+# 浏览器打开 http://localhost:8501
 ```
 
 ---
@@ -157,6 +164,25 @@ NailFit · 推荐结果
 | `--scene` | `commute` / `date` / `wedding` / `festival` / `cool` / `y2k` | 场景 |
 
 其他参数：`--free-text "想要温柔显白"`（自由描述，参与语义加权）、`--llm`（有 Key 时用云端生成理由）、`--json`（机器可读）、`--interactive`（强制逐项填写）、`--yes`（用默认值，不反问）。
+
+## 网页前端（Streamlit，M14）
+
+命令行之外，也给了一个可交互的网页版本：左边填 7 项特征（或选场景预设），右边出三张推荐卡。
+
+```bash
+pip install -r requirements-frontend.txt   # 只装前端依赖，不影响核心测试
+streamlit run app/streamlit_app.py         # 默认 http://localhost:8501
+```
+
+页面能力：
+
+- 场景预设（短宽暖皮 / 纤细冷皮 / 浓郁节日 / 长甲 y2k）+ 7 个下拉逐个微调
+- 自由描述（参与语义加权）与「用大模型生成理由」开关（需 `DEEPSEEK_API_KEY`）
+- 款式库切换：样例库（13 条，占位图）/ 演示库（43 条，带演示图）
+- 三张卡展示：图片、档位、匹配度、推荐理由、避雷提示、命中规则
+- 「查看原始 JSON」便于调试和接下游
+
+前端只负责布局，特征校验、推荐编排、视图整理分别复用 `core.features` / `core.pipeline` / `core.ui_view`，和 CLI、FastAPI 行为一致。`tests/test_frontend.py` 用 Streamlit 官方 `AppTest` 做冒烟测试，没装 streamlit 时自动跳过。
 
 ## 款式库校验
 

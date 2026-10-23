@@ -28,66 +28,8 @@ from core.errors import NailFitError  # noqa: E402
 from core.features import FeatureError, HandFeatures  # noqa: E402
 from core.labels import FIELD_TITLES, label, summarize  # noqa: E402
 from core.pipeline import recommend  # noqa: E402
+from core.presets import DEFAULTS, FEATURE_FIELDS, SCENARIOS  # noqa: E402
 from core.validator import ContractError  # noqa: E402
-
-FEATURE_FIELDS = [
-    "nail_bed_ratio",
-    "nail_shape",
-    "length",
-    "ita_band",
-    "warmth",
-    "hand_type",
-    "scene",
-]
-
-DEFAULTS = {
-    "nail_bed_ratio": "standard",
-    "nail_shape": "oval",
-    "length": "short",
-    "ita_band": "light",
-    "warmth": "warm",
-    "hand_type": "standard",
-    "scene": "commute",
-}
-
-SCENARIOS: dict[str, dict[str, str]] = {
-    "short_wide_warm": {
-        "nail_bed_ratio": "short_wide",
-        "nail_shape": "oval",
-        "length": "short",
-        "ita_band": "light",
-        "warmth": "warm",
-        "hand_type": "fleshy",
-        "scene": "commute",
-    },
-    "slender_cool": {
-        "nail_bed_ratio": "slender",
-        "nail_shape": "almond",
-        "length": "mid",
-        "ita_band": "light",
-        "warmth": "cool",
-        "hand_type": "slim",
-        "scene": "date",
-    },
-    "deep_festival": {
-        "nail_bed_ratio": "standard",
-        "nail_shape": "squoval",
-        "length": "short",
-        "ita_band": "deep",
-        "warmth": "warm",
-        "hand_type": "standard",
-        "scene": "festival",
-    },
-    "long_y2k": {
-        "nail_bed_ratio": "standard",
-        "nail_shape": "square",
-        "length": "long",
-        "ita_band": "mid",
-        "warmth": "neutral",
-        "hand_type": "standard",
-        "scene": "y2k",
-    },
-}
 
 
 def build_parser() -> argparse.ArgumentParser:

@@ -1,0 +1,4 @@
+# 可选：Streamlit 网页前端
+# 安装：pip install -r requirements-frontend.txt
+# 启动：streamlit run app/streamlit_app.py
+streamlit>=1.36
