@@ -73,6 +73,23 @@ SCENARIO_LABELS: dict[str, str] = {
     "long_y2k": "长甲 · 方形 · Y2K",
 }
 
+# 场景（`scene` 特征）的合法取值来自 taxonomy；这里只补中文标签。
+# 注意：上面的 SCENARIOS 是"特征预设"（把 7 个字段打包成套），不是 scene 的取值，
+# 前端「选择场景」的下拉必须用 scene_options()，不要用 SCENARIOS。
+SCENE_LABELS: dict[str, str] = {
+    "commute": "通勤",
+    "date": "约会",
+    "wedding": "婚礼",
+    "festival": "节日",
+    "cool": "酷感",
+    "y2k": "Y2K",
+}
+
+
+def scene_options() -> list[str]:
+    """scene 特征的合法取值（顺序与 taxonomy 一致）。"""
+    return list(load_taxonomy()["features"]["scene"])
+
 
 def feature_options() -> dict[str, list[str]]:
     """从 taxonomy 读每项特征的合法取值（与后端校验同源）。"""

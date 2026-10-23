@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
 
 from core.errors import EmptyStyleLibraryError  # noqa: E402
 from core.features import FeatureError  # noqa: E402
-from core.presets import SCENARIOS  # noqa: E402
+from core.presets import SCENE_LABELS, SCENARIOS, scene_options  # noqa: E402
 from core.ui_view import (  # noqa: E402
     build_features,
     card_view,
@@ -61,6 +61,20 @@ def test_generate_accepts_vision_payload() -> None:
         use_llm=False,
     )
     assert len(payload["recommendations"]) == 3
+
+
+def test_scene_options_are_taxonomy_scenes() -> None:
+    """手照识别侧的场景下拉必须是 scene 枚举，不能用特征预设名（回归）。"""
+    scenes = scene_options()
+    assert set(SCENE_LABELS) == set(scenes)
+    assert {"commute", "date", "wedding", "festival", "cool", "y2k"} <= set(scenes)
+    assert "slender_cool" not in scenes
+
+
+def test_build_features_rejects_preset_name_as_scene() -> None:
+    """把预设名当场景传会报非法值（而不是被误当成未知字段）。"""
+    with pytest.raises(ValueError):
+        build_features({"scene": "slender_cool"})
 
 
 def test_tier_label() -> None:

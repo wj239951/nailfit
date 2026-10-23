@@ -37,9 +37,11 @@ from core.pipeline import features_from_image  # noqa: E402
 from core.presets import (  # noqa: E402
     DEFAULTS,
     FEATURE_FIELDS,
+    SCENE_LABELS,
     SCENARIO_LABELS,
     SCENARIOS,
     feature_options,
+    scene_options,
 )
 from core.ui_view import (  # noqa: E402
     avoid_tips,
@@ -200,10 +202,14 @@ def render_vision_sidebar() -> None:
         st.warning("手部模型还没下载（约 8MB）")
         st.button("下载模型", type="primary", on_click=_download_model, use_container_width=True)
 
+    scenes = scene_options()
+    if st.session_state.get("vision_scene") not in scenes:
+        # 旧会话里可能残留“特征预设名”（如 slender_cool），重置为合法场景
+        st.session_state["vision_scene"] = scenes[0]
     st.selectbox(
-        "场景",
-        list(SCENARIOS),
-        format_func=lambda name: f"{SCENARIO_LABELS[name]}（{name}）",
+        "使用场景",
+        scenes,
+        format_func=lambda name: f"{SCENE_LABELS.get(name, name)}（{name}）",
         key="vision_scene",
         help="场景从手照里推断不出来，需要手动选",
     )
