@@ -35,3 +35,10 @@ static/preview/
 
 # MediaPipe 模型（约 8MB，用 scripts/vision_demo.py --download-model 下载）
 models/
+
+# 临时/探测文件
+_tmp_pytest/
+tests/_scratch_*/
+tests/_autotag_tmp/
+tests/_img_tmp/
+_probe_*.py

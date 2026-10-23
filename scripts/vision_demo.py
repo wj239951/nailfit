@@ -81,7 +81,7 @@ def print_result(path: Path, result, scene: str) -> None:
             confidence = result.confidences.get(name, 0.0)
             print(f"  {name:<15}{features[name]:<12}（置信度 {confidence:.2f}）")
         else:
-            print(f"  {name:<15}{'—':<12}（不可靠，需张开五指重拍）")
+            print(f"  {name:<15}{'—':<12}（这个角度量不准，可用下拉补选）")
     if result.metrics.get("ita_degrees") is not None:
         print(f"  ITA°            {result.metrics['ita_degrees']:.1f}")
     for key in ("hand_extension", "finger_travel", "palm_ratio", "aspect", "taper"):
@@ -151,8 +151,9 @@ def main() -> int:
     print(f"完成 {ok}/{len(images)} 张；照片质量分布：{qualities or '—'}")
     if declined:
         print(
-            f"其中 {declined} 张不是标准手背照（握拳/侧位/手朝镜头），只输出肤色，"
-            "甲型/甲长/手型按「不可靠」处理 —— 拍法见 README「视觉层」一节。"
+            f"其中 {declined} 张不是「手背平放/自然展开」的角度，只输出肤色，"
+            "甲床比例/甲型/甲长/手型按「不可靠」处理（页面上用下拉补选即可；"
+            "想要全自动就手背平放在桌面、手机从正上方拍）——见 README「视觉层」一节。"
         )
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)

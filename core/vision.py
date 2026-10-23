@@ -53,8 +53,11 @@ MIDDLE_TIP = 12
 # 质量门槛（启发式）
 MIN_BBOX_AREA = 0.03          # 手部检测框面积占整图比例
 MIN_HANDEDNESS = 0.65         # MediaPipe 左右手置信度
-CLENCHED_EXTENSION = 0.82     # 四指平均伸展度低于此值 → 视为握拳/弯曲
-OPEN_GESTURES = ("Open_Palm",)  # 只有张开的手掌才允许量甲面
+# 自然角度支持：多数人随手拍的是「握拳/半握展示美甲」，这种角度只出肤色；
+# 手势是 Open_Palm，或几何伸展度 ≥ OPEN_EXTENSION（手背平放 / 自然展开）时才全自动量甲面。
+OPEN_EXTENSION = 0.88
+RELAXED_EXTENSION = 0.60      # 0.60–0.88：手略扣，甲面量测不可靠，只出肤色
+OPEN_GESTURES = ("Open_Palm",)  # 手势模型给「张开手掌」时直接放行
 CLENCHED_GESTURES = (
     "Closed_Fist",
     "Thumb_Up",
@@ -63,10 +66,10 @@ CLENCHED_GESTURES = (
     "Victory",
     "ILoveYou",
 )
-# 手势模型没识别出姿势时，用「指尖到指根的平均距离 / 掌长」兜底
+# 手势模型没识别出姿势时，用「指尖到指根的平均距离 / 掌长」兜底（仅作参考量）
 MIN_FINGER_TRAVEL = 0.55
 # 手掌透视：掌宽/掌长超过这个值，说明手朝镜头/侧位，2D 量甲面没有意义
-MAX_PALM_RATIO = 1.25
+MAX_PALM_RATIO = 1.35
 
 # 手型阈值：palm_width / palm_length（M12 用真实数据校准）
 HAND_TYPE_THRESHOLDS = (0.82, 0.98)   # <0.82 slim，<0.98 standard，其余 fleshy
@@ -242,10 +245,11 @@ def classify_skin(rgb: tuple[int, int, int]) -> dict[str, Any]:
 
 
 def quality_gate(observation: HandObservation) -> tuple[str, list[str]]:
-    """返回 (quality, notes)。quality ∈ {"ok", "clenched", "pose", "low"}。
+    """返回 (quality, notes)。quality ∈ {"ok", "relaxed", "clenched", "pose", "low"}。
 
-    优先信 MediaPipe 的手势分类（握拳、比拇指等一眼可见的姿势），
-    手势没给结论时再用几何量兜底。甲面量测只接受「ok」。
+    设计原则：不强迫用户摆拍。随手把「握拳/半握展示美甲」的照片发上来是常态，
+    这种角度只自动出肤色，其余特征让用户用下拉补（M11）；
+    只有手背平放/自然展开（伸展度够，或手势模型判为 Open_Palm）时才全自动量甲面。
     """
     notes: list[str] = []
     if observation.bbox_area_ratio < MIN_BBOX_AREA:
@@ -256,38 +260,36 @@ def quality_gate(observation: HandObservation) -> tuple[str, list[str]]:
         return "low", notes
 
     palm = palm_ratio(observation.landmarks)
-    travel = finger_travel(observation.landmarks)
-
+    extension = finger_extension(observation.landmarks)
     gesture = observation.gesture
-    if gesture in OPEN_GESTURES:
-        if palm <= MAX_PALM_RATIO:
-            return "ok", notes
-        notes.append(f"手掌透视过重（掌宽/掌长 {palm:.2f}），请手背平放正对镜头")
-        return "pose", notes
-    if gesture in CLENCHED_GESTURES:
-        notes.append(
-            f"手势识别为 {gesture}（{observation.gesture_score:.2f}），不是张开的手背照，"
-            "甲型、甲长相关特征不可靠，建议五指自然分开、手背朝向镜头重拍"
-        )
-        return "clenched", notes
 
-    # 手势未知：用掌宽/掌长 + 指尖距离兜底
+    # 掌宽/掌长过大：手朝镜头或侧位，2D 量甲面没有意义
     if palm > MAX_PALM_RATIO:
         notes.append(
-            f"手掌透视过重（掌宽/掌长 {palm:.2f} > {MAX_PALM_RATIO}），手朝镜头或侧位时"
-            "掌宽掌长不可比，建议手背平放、五指张开重拍"
+            f"手掌透视过重（掌宽/掌长 {palm:.2f} > {MAX_PALM_RATIO}），手可能朝镜头或侧着；"
+            "甲面量测不可靠，建议手背平放、从正上方拍一张"
         )
         return "pose", notes
-    if travel < MIN_FINGER_TRAVEL:
+
+    if gesture in OPEN_GESTURES or extension >= OPEN_EXTENSION:
+        if gesture in OPEN_GESTURES:
+            notes.append(f"手势：{gesture}（{observation.gesture_score:.2f}）")
+        else:
+            notes.append(f"手背自然展开（伸展度 {extension:.2f}）")
+        return "ok", notes
+
+    if extension >= RELAXED_EXTENSION:
         notes.append(
-            f"手指不伸展（指尖/掌长 {travel:.2f} < {MIN_FINGER_TRAVEL}），"
-            "甲型、甲长相关特征不可靠，建议五指自然分开重拍"
+            f"手有点扣（伸展度 {extension:.2f}），甲型/甲长/甲床量不准；只自动出肤色，"
+            "其余特征用下拉补选，或把手背平放在桌面从正上方拍一张"
         )
-        return "clenched", notes
+        return "relaxed", notes
+
     notes.append(
-        f"手势未识别，几何上接近张开手（掌宽/掌长 {palm:.2f}，指尖/掌长 {travel:.2f}）"
+        f"手势：{gesture}（{observation.gesture_score:.2f}）、伸展度 {extension:.2f}；"
+        "握拳/展示美甲的角度只自动出肤色，甲面与手型请用下拉补选（或手背平放重拍）"
     )
-    return "ok", notes
+    return "clenched", notes
 
 
 # --------------------------------------------------------------------------- 图像处理（可选依赖）
@@ -534,10 +536,10 @@ def _patch_rgb(np, bgr, x: float, y: float, half: int = 6) -> tuple[int, int, in
 
 
 def sample_skin(cv2, np, bgr, observation: HandObservation) -> tuple[int, int, int]:
-    """取手背/指根附近的皮肤中位色（避开指甲、高光与深色袖口）。
+    """取手背/指根附近的皮肤中位色（避开指甲、高光、深色袖口和指缝阴影）。
 
-    采样点：腕点与四指根中心之间的手背中央 + 每个指根往掌内 35% 的位置；
-    每个候选点先过肤色 Lab 粗筛，最后取所有有效候选的中位数。
+    在掌心和指根周围撒一串小采样点，先过肤色 Lab 粗筛，再按亮度中位数过滤掉
+    明显偏暗的阴影点，最后取中位色——自然角度（握拳、手朝镜头）下也尽量稳。
     """
     landmarks = observation.landmarks
     mask = _skin_mask(cv2, np, bgr)
@@ -547,44 +549,67 @@ def sample_skin(cv2, np, bgr, observation: HandObservation) -> tuple[int, int, i
         sum(p[0] for p in mcp_points) / 4.0,
         sum(p[1] for p in mcp_points) / 4.0,
     )
-    candidates: list[tuple[float, float]] = [
-        (wrist[0] + (center[0] - wrist[0]) * 0.55, wrist[1] + (center[1] - wrist[1]) * 0.55),
-        center,
-    ]
+    candidates: list[tuple[float, float]] = []
+    for t in (0.35, 0.5, 0.65):
+        candidates.append(
+            (
+                wrist[0] + (center[0] - wrist[0]) * t,
+                wrist[1] + (center[1] - wrist[1]) * t,
+            )
+        )
+    candidates.append(center)
     for mcp in mcp_points:
-        candidates.append((mcp[0] + (center[0] - mcp[0]) * 0.35, mcp[1] + (center[1] - mcp[1]) * 0.35))
+        for t in (0.2, 0.4):
+            candidates.append(
+                (
+                    mcp[0] + (center[0] - mcp[0]) * t,
+                    mcp[1] + (center[1] - mcp[1]) * t,
+                )
+            )
+    # 相邻指根连线的中点（指蹼/手背），光更均匀
+    for first, second in zip(mcp_points, mcp_points[1:]):
+        candidates.append(((first[0] + second[0]) / 2.0, (first[1] + second[1]) / 2.0))
 
+    height, width = bgr.shape[:2]
     samples: list[tuple[int, int, int]] = []
     for x, y in candidates:
         xi, yi = int(round(x)), int(round(y))
-        height, width = bgr.shape[:2]
         if not (0 <= xi < width and 0 <= yi < height) or mask[yi, xi] == 0:
             continue
         rgb = _patch_rgb(np, bgr, x, y)
         if rgb and _looks_like_skin(rgb):
             samples.append(rgb)
 
-    if not samples:
-        # 候选点都不合格：退回「手部检测框内的所有肤色像素」取中位色
-        x, y, w, h = (int(round(v)) for v in observation.bbox)
-        x0, y0 = max(0, x), max(0, y)
-        x1, y1 = min(bgr.shape[1], x + w), min(bgr.shape[0], y + h)
-        region_mask = mask[y0:y1, x0:x1]
-        region = bgr[y0:y1, x0:x1][region_mask > 0]
-        if region.size:
-            b, g, r = np.median(region.reshape(-1, 3), axis=0)
-            rgb = (int(r), int(g), int(b))
-            if _looks_like_skin(rgb):
-                return rgb
-        fallback = _patch_rgb(np, bgr, center[0], center[1])
-        if fallback and _looks_like_skin(fallback):
-            return fallback
-        return (200, 170, 150)
+    if samples:
+        lumas = [0.299 * r + 0.587 * g + 0.114 * b for r, g, b in samples]
+        threshold = float(np.median(lumas)) * 0.85
+        lit = [rgb for rgb, luma in zip(samples, lumas) if luma >= threshold]
+        samples = lit or samples
+        r = int(round(float(np.median([s[0] for s in samples]))))
+        g = int(round(float(np.median([s[1] for s in samples]))))
+        b = int(round(float(np.median([s[2] for s in samples]))))
+        return (r, g, b)
 
-    r = int(round(sum(s[0] for s in samples) / len(samples)))
-    g = int(round(sum(s[1] for s in samples) / len(samples)))
-    b = int(round(sum(s[2] for s in samples) / len(samples)))
-    return (r, g, b)
+    # 候选点都不合格：退回「手部检测框内的肤色像素」，同样先去掉阴影再取中位色
+    x, y, w, h = (int(round(v)) for v in observation.bbox)
+    x0, y0 = max(0, x), max(0, y)
+    x1, y1 = min(bgr.shape[1], x + w), min(bgr.shape[0], y + h)
+    region_mask = mask[y0:y1, x0:x1]
+    region = bgr[y0:y1, x0:x1][region_mask > 0]
+    if region.size:
+        region = region.reshape(-1, 3)
+        lumas = region[:, 0] * 0.114 + region[:, 1] * 0.587 + region[:, 2] * 0.299
+        threshold = float(np.median(lumas)) * 0.85
+        lit = region[lumas >= threshold]
+        pixels = lit if len(lit) else region
+        b_channel, g_channel, r_channel = np.median(pixels, axis=0)
+        rgb = (int(r_channel), int(g_channel), int(b_channel))
+        if _looks_like_skin(rgb):
+            return rgb
+    fallback = _patch_rgb(np, bgr, center[0], center[1])
+    if fallback and _looks_like_skin(fallback):
+        return fallback
+    return (200, 170, 150)
 
 
 def draw_preview(cv2, np, bgr, observation: HandObservation, result_features: dict[str, str],
@@ -645,7 +670,6 @@ def extract(
     metrics["hand_extension"] = round(finger_extension(observation.landmarks), 3)
     metrics["finger_travel"] = round(finger_travel(observation.landmarks), 3)
     metrics["palm_ratio"] = round(palm_ratio(observation.landmarks), 3)
-    notes.append(f"手势：{observation.gesture}（{observation.gesture_score:.2f}）")
 
     # 肤色：任何手势都能测皮肤（避开袖口/指甲后取中位色）
     rgb = sample_skin(cv2, np, bgr, observation)
@@ -658,16 +682,29 @@ def extract(
     confidences["warmth"] = 0.55 if quality != "low" else 0.35
     notes.append(f"皮肤采样 RGB={rgb}，Lab={skin['lab']}")
 
-    # 手型：palm_width / palm_length，只在张开、正对镜头时量
+    # 逆光/欠曝时肤色会被判深：降置信度并提示，别让用户以为是自己肤色问题
+    if metrics["skin_luma"] < 140:
+        for key in ("ita_band", "warmth"):
+            confidences[key] = round(confidences[key] * 0.6, 2)
+        notes.append(
+            f"照片偏暗/逆光（手部亮度 {metrics['skin_luma']:.0f}），肤色可能被判深，建议顺光拍"
+        )
+
+    # 手型：palm_width / palm_length，需要手掌平面基本正对镜头
     if quality == "ok":
         hand_type = classify_hand_type(metrics["palm_ratio"])
         features["hand_type"] = hand_type
         confidences["hand_type"] = 0.6
     else:
         unreliable.append("hand_type")
-        notes.append("手型未输出：握拳或透视太重时掌宽/掌长不可靠")
+        if quality in {"relaxed", "clenched"}:
+            notes.append(
+                "手型没自动量：手掌没放平/正对镜头时掌宽掌长不可比，可用下拉补选"
+            )
+        else:
+            notes.append("手型没自动量：透视过重或手太小，可用下拉补选")
 
-    # 甲面量测：必须手指伸展才有意义
+    # 甲面量测：只接受「手背平放 / 自然展开」的 ok 质量
     finger_metrics = measure_fingers(cv2, np, bgr, observation)
     metrics.update(finger_metrics)
     if quality == "ok" and "nail_width_px" in finger_metrics:
@@ -685,8 +722,13 @@ def extract(
         unreliable.extend(["nail_bed_ratio", "nail_shape", "length"])
         if quality == "ok":
             notes.append("甲面量测失败：手部轮廓没取到，建议光线更均匀、指甲不要贴边")
+        elif quality in {"relaxed", "clenched"}:
+            notes.append(
+                "甲床/甲型/甲长用当前这个角度量不准，先用下拉补选即可；"
+                "想要全自动的话，把手背平放在桌面、手机从正上方拍一张"
+            )
         else:
-            notes.append("甲床/甲型/甲长未输出：建议五指自然分开、手背朝向镜头重拍")
+            notes.append("甲床/甲型/甲长未输出：照片角度或清晰度不够，建议手背平放、从正上方拍")
 
     result = VisionResult(
         observation=observation,

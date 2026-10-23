@@ -51,9 +51,10 @@ UPLOAD_DIR = ROOT / "static" / "preview" / "_uploads"
 MODE_MANUAL = "手动选择特征"
 MODE_VISION = "手照识别"
 QUALITY_TEXT = {
-    "ok": "✅ 标准手背照",
-    "clenched": "⚠️ 握拳/手指弯曲：甲面特征不可靠",
-    "pose": "⚠️ 手指朝向镜头/侧位：甲面特征不可靠",
+    "ok": "✅ 手背平放/自然展开，甲面可全自动量",
+    "relaxed": "🟡 手略扣：自动出肤色，甲面特征用下拉补 2 秒",
+    "clenched": "🟠 握拳/展示角度：自动出肤色，甲面特征用下拉补 2 秒",
+    "pose": "⚠️ 手朝镜头/侧位：甲面特征不可靠",
     "low": "⚠️ 手太小或检测置信度低",
 }
 
@@ -213,14 +214,18 @@ def render_vision_sidebar() -> None:
         st.image(st.session_state["vision_image"], caption="已上传手照", width=220)
 
     st.button("识别手部特征", type="primary", on_click=_analyze_hand, use_container_width=True)
-    st.caption("拍法：手背朝上、五指自然张开、指尖朝镜头、整只手入画、光线均匀。握拳/侧位照片只会给出肤色。")
+    st.caption(
+        "拍法（最省事）：**手背朝上平放在桌面/腿上，手机从正上方拍**，手指自然并拢或微开即可。"
+        "握拳、展示美甲这类随手角度也能用——会自动出肤色，甲面几项用下拉补选。"
+    )
 
 
 def render_vision_area() -> None:
     st.title("NailFit · 手照识别")
     st.write(
-        "上传一张手背照，自动提取 **甲床比例 / 甲型 / 甲长 / 肤色 / 手型**，"
+        "上传一张手照，自动提取 **肤色 / 手型 / 甲床比例 / 甲型 / 甲长**，"
         "再走和手工录入同一套规则引擎给出三档推荐。"
+        "自然角度（握拳、展示美甲）也能用，只是甲面几项会让你用下拉补选。"
     )
 
     vision_error = st.session_state.get("vision_error")
@@ -245,7 +250,8 @@ def render_vision_area() -> None:
     unreliable = meta.get("unreliable") or []
     if unreliable:
         st.warning(
-            "这些特征从这张照片里不可靠，请手动补一下：" + "、".join(FIELD_TITLES.get(f, f) for f in unreliable)
+            "这几项这个角度量不准，用下面的下拉补一下就行（不用重拍）："
+            + "、".join(FIELD_TITLES.get(f, f) for f in unreliable)
         )
         enums = feature_options()
         columns = st.columns(min(3, len(unreliable)))

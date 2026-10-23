@@ -206,15 +206,16 @@ def recommend_from_image(
         detail = "、".join(missing) if missing else "照片质量过低"
         raise VisionUnusableError(
             f"这张照片没能可靠地给出这些特征：{detail}。"
-            "请按 README「拍图规范」重拍（手背朝上、五指张开、指尖朝镜头），"
-            "或改用「手工录入」功能补齐缺项。"
+            "有两种做法：① 在前端用下拉把这几项补上（不需要重拍）；"
+            "② 想要全自动就手背平放在桌面、手机从正上方拍一张；"
+            "③ 或改用「手工录入」功能补齐缺项。"
         )
     try:
         features = HandFeatures.from_dict(payload)
     except FeatureError as exc:
         raise VisionUnusableError(
-            f"这张照片只识别出一部分特征（{exc}）。请按 README 手照规范重拍，"
-            "或改用手工录入补齐缺项。"
+            f"这张照片只识别出一部分特征（{exc}）。可以在前端用下拉补齐，"
+            "或手背平放从正上方重拍一张。"
         ) from exc
 
     result = recommend(

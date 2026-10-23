@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from core import vision
@@ -128,6 +130,33 @@ def test_quality_clenched_for_fist_gesture():
     assert "Closed_Fist" in notes[0]
 
 
+def make_relaxed_landmarks() -> list[tuple[float, float]]:
+    """手指「有点扣」：指尖向掌心方向折回，伸展度落在 0.60–0.88。"""
+    points = make_landmarks(open_hand=True)
+    offsets = ((0.10, 0.35), (0.20, 0.70), (0.35, 0.55))  # pip / dip / tip 相对 mcp
+    for mcp, pip, dip, tip in FINGERS.values():
+        base = points[mcp]
+        for index, (dx, dy) in zip((pip, dip, tip), offsets):
+            points[index] = (base[0] + dx, base[1] + dy)
+    return points
+
+
+def test_quality_relaxed_for_slightly_bent_hand():
+    """自然随手拍（手略扣）不判错，只降级到「只出肤色」，提示用下拉补。"""
+    obs = make_observation(open_hand=True, gesture="Unknown")
+    obs.landmarks = make_relaxed_landmarks()
+    quality, notes = quality_gate(obs)
+    assert quality == "relaxed"
+    assert "下拉" in notes[0]
+
+
+def test_quality_ok_for_flat_hand_without_gesture():
+    """手势模型没给 Open_Palm 时，几何伸展度足够也算平放/自然展开。"""
+    quality, notes = quality_gate(make_observation(open_hand=True, gesture="None"))
+    assert quality == "ok"
+    assert "自然展开" in notes[0]
+
+
 def test_quality_pose_when_palm_foreshortened():
     obs = make_observation(open_hand=True, gesture="Unknown")
     # 把横向拉宽 2.5 倍，模拟「手朝镜头、掌宽/掌长失真」
@@ -173,14 +202,22 @@ def test_classify_skin_returns_project_enums():
 
 
 # --------------------------------------------------------------------------- 入口错误
-def test_detect_hand_rejects_missing_image(tmp_path):
-    with pytest.raises(vision.VisionError):
-        vision.detect_hand(tmp_path / "nope.jpg")
+@pytest.fixture()
+def scratch_dir():
+    """项目内临时目录（DSH 沙箱下系统 tmp 不可写，pytest 的 tmp_path 会 PermissionError）。"""
+    path = Path(__file__).resolve().parents[1] / "tests" / "_scratch_vision"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
-def test_ensure_model_raises_when_missing(tmp_path):
+def test_detect_hand_rejects_missing_image(scratch_dir):
     with pytest.raises(vision.VisionError):
-        vision.ensure_model(tmp_path / "no.task")
+        vision.detect_hand(scratch_dir / "nope.jpg")
+
+
+def test_ensure_model_raises_when_missing(scratch_dir):
+    with pytest.raises(vision.VisionError):
+        vision.ensure_model(scratch_dir / "no.task")
 
 
 def test_vision_error_is_naiffit_error():
