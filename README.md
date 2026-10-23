@@ -59,7 +59,8 @@ nailfit/
 │   ├── labels.py            # 中文标签（特征名 / 甲型 / 场景）
 │   ├── retriever.py         # 可选语义加权（bge-m3）
 │   ├── explainer.py         # LLM 生成理由（无 key 时模板降级）
-│   └── validator.py         # 输出契约校验
+│   ├── validator.py         # 输出契约校验
+│   └── vision.py            # 手照 → MediaPipe 关键点 → 手部特征（M8，可选依赖）
 ├── api/
 │   ├── main.py              # FastAPI 入口
 │   ├── routes.py            # /api/recommend /api/styles
@@ -71,10 +72,14 @@ nailfit/
 │   ├── manual.py            # 手工录入 7 项手部特征 → 三张推荐卡
 │   ├── validate_styles.py   # 款式库数据校验
 │   ├── prepare_images.py    # 款式图批量裁切 / 缩放 / 压缩（≤300KB）
+│   ├── vision_demo.py       # 手照 → 手部特征（M8，需 mediapipe）
 │   └── autotag.py           # 图片 → 结构化款式标签，生成演示款式库
-├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理
+├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层
+├── models/                  # MediaPipe 模型缓存（gitignore，首次使用时自动下载）
+├── raw_hands/               # 本地手照素材（gitignore）
 ├── static/styles/           # 款式图片（按 style id 命名）
 ├── static/demo/             # 演示图片（不入库、不进 git，仅工程演示）
+├── static/preview/          # 视觉层关键点标注图（gitignore）
 └── docs/
     ├── design.md            # 设计说明
     ├── IMAGE_GUIDE.md       # 图片来源、选图标准与入库流程
@@ -108,6 +113,9 @@ uvicorn api.main:app --reload --port 8000
 pip install -r requirements-frontend.txt
 streamlit run app/streamlit_app.py
 # 浏览器打开 http://localhost:8501
+
+# 6. 手照识别（可选，需要 requirements-vision.txt；模型会在首次使用时自动下载）
+python scripts/vision_demo.py --dir raw_hands
 ```
 
 ---
@@ -167,7 +175,7 @@ NailFit · 推荐结果
 
 ## 网页前端（Streamlit，M14）
 
-命令行之外，也给了一个可交互的网页版本：左边填 7 项特征（或选场景预设），右边出三张推荐卡。
+命令行之外，也给了一个可交互的网页版本：**手照识别** 或 **手工填 7 项特征**，右侧出三张推荐卡。
 
 ```bash
 pip install -r requirements-frontend.txt   # 只装前端依赖，不影响核心测试
@@ -176,13 +184,15 @@ streamlit run app/streamlit_app.py         # 默认 http://localhost:8501
 
 页面能力：
 
+- 输入方式切换：**手照识别**（上传手照 → 自动提特征）或 **手动选择特征**
+- 手照识别：模型未下载时页面内一键下载；上传后展示质量、左右手、手势、ITA°，不可靠字段用下拉手动补（M11 回退）
 - 场景预设（短宽暖皮 / 纤细冷皮 / 浓郁节日 / 长甲 y2k）+ 7 个下拉逐个微调
 - 自由描述（参与语义加权）与「用大模型生成理由」开关（需 `DEEPSEEK_API_KEY`）
 - 款式库切换：样例库（13 条，占位图）/ 演示库（43 条，带演示图）
 - 三张卡展示：图片、档位、匹配度、推荐理由、避雷提示、命中规则
 - 「查看原始 JSON」便于调试和接下游
 
-前端只负责布局，特征校验、推荐编排、视图整理分别复用 `core.features` / `core.pipeline` / `core.ui_view`，和 CLI、FastAPI 行为一致。`tests/test_frontend.py` 用 Streamlit 官方 `AppTest` 做冒烟测试，没装 streamlit 时自动跳过。
+前端只负责布局，特征校验、推荐编排、视图整理分别复用 `core.features` / `core.pipeline` / `core.ui_view`，手照识别复用 `core.vision`，和 CLI、FastAPI 行为一致。`tests/test_frontend.py` 用 Streamlit 官方 `AppTest` 做冒烟测试，没装 streamlit 时自动跳过。
 
 ## 款式库校验
 
@@ -219,6 +229,34 @@ python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
 
 颜色维度（hue / color_family / tone / value / saturation）从图片主色计算；形状、工艺、长度、场景从文件名关键词推测。想人工修正，把字段写进 `data/demo_labels.json`（id → 字段），再 `python scripts/autotag.py --overrides data/demo_labels.json`。
 
+### 视觉层：手照 → 手部特征（M8/M9）
+
+装好 mediapipe 后，用 `scripts/vision_demo.py` 把一张手照变成和手工录入同口径的特征（模型缺失时会自动下载到 `models/`，约 8MB）：
+
+```bash
+# 单张 / 整个目录（raw_hands/ 里的手照已被 gitignore）
+python scripts/vision_demo.py raw_hands/hand01_right_01.jpg
+python scripts/vision_demo.py --dir raw_hands
+
+# 不想自动下载时加 --no-download
+python scripts/vision_demo.py --dir raw_hands --no-download
+
+# 输出 JSON（接 API / 攒评测集）
+python scripts/vision_demo.py --dir raw_hands --json out_hands.json
+```
+
+输出：左右手、手势、肤色（ITA° → `ita_band`/`warmth`）、甲床比例/甲型/甲长/手型，以及每项的置信度和原始几何量；同时在 `static/preview/` 生成关键点标注图。
+
+手照直接出推荐（M9）有三条入口，行为一致：`core.pipeline.recommend_from_image()`、`POST /api/recommend/from-image`、Streamlit 前端「手照识别」。
+
+**拍图规范（不满足会降级，不会硬猜）**：
+
+- 手背朝上、五指自然张开，指甲朝向镜头；整只手入画，占画面 ≥ 15%；
+- 光线均匀，避免逆光和强反光；
+- 握拳、比手势、手朝镜头（透视过重）时，只输出肤色，甲型/甲长/手型标为「不可靠」，回退到手工录入（M11）。
+
+已知限制：MediaPipe 的手势分类在“手背”视角下经常给 `None`，所以质量门槛用「手势 + 掌宽/掌长 + 指尖/掌长」三重兜底；甲面量测的阈值仍是启发式初值，要等 M12 用标准手照校准。
+
 ---
 
 ## API
@@ -245,6 +283,27 @@ python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
 ### `GET /api/styles`
 款式库列表（用于前端展示与调试）。库为空或数据损坏时返回 `503`。
 
+### `POST /api/vision/extract`（M8/M9）
+
+手照路径 → 手部特征（只识别，不推荐）：
+
+```json
+{
+  "image_path": "raw_hands/hand01_right_01.jpg",
+  "scene": "commute",
+  "overrides": {"nail_shape": "oval"},
+  "auto_download": false
+}
+```
+
+返回 `features`、`quality`（`ok` / `clenched` / `pose` / `low`）、`handedness`、`gesture`、`confidences`、`unreliable`（不可靠/缺失字段）、`notes`、`ita_degrees`、`metrics`、`preview`（关键点标注图路径）。
+
+### `POST /api/recommend/from-image`（M9）
+
+手照直接出三张推荐卡（响应在 `POST /api/recommend` 基础上多一个 `vision` 元信息）。照片质量不达标或缺特征时返回 `422`，提示重拍或改用 `POST /api/recommend` 手工补齐。
+
+> 说明：当前 `image_path` 是本地路径，只适合本机演示；公网部署时应改成上传接口并加鉴权。
+
 ## 错误处理
 
 所有失败路径都返回**一行能看懂的中文原因**，不用翻 traceback：
@@ -256,6 +315,8 @@ python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
 | 款式库为空（`styles: []`） | 同上 | `503`，`款式库不可用: ...` |
 | 规则过滤后无候选 | `✗ 推荐失败：没有通过硬性过滤的款式...` | `422`，`无法生成推荐: ...` |
 | 过滤后不足 3 款（凑不齐三档） | 同上 | `422`，`过滤后只剩 N 款，至少需要 3 款` |
+| 手照没检测到手 / 模型缺失 | `✗ ...`，退出码 2 | `422`，`手照识别失败: ...` |
+| 手照质量不达标（握拳/朝镜头） | 只输出肤色，甲面字段标「不可靠」 | `422`，`手照信息不足: ...`，提示重拍或手工补齐 |
 | 输出契约失败（模型编了不存在的款式） | `✗ 推荐失败：...` | `502`，`推荐结果校验失败: ...` |
 
 自测这些边界（不需要真实数据）：

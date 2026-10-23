@@ -45,3 +45,36 @@ class RecommendResponse(BaseModel):
     recommendations: list[StyleCard]
     avoid: list[str] = Field(default_factory=list)
     meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class VisionExtractRequest(BaseModel):
+    image_path: str = Field(..., description="本地手照路径（演示用；正式环境应改成上传接口）")
+    scene: str = Field(default="commute", description="场景，手照推断不出来，由前端传入")
+    overrides: dict[str, str] = Field(
+        default_factory=dict, description="人工修正的特征，优先级高于视觉结果（M11 回退）"
+    )
+    auto_download: bool = Field(default=False, description="模型缺失时是否自动下载（约 8MB）")
+
+
+class VisionExtractResponse(BaseModel):
+    features: dict[str, Any] = Field(description="识别出的特征（可能缺项，见 unreliable）")
+    quality: str = Field(description="ok / clenched / pose / low")
+    handedness: str = ""
+    handedness_score: float = 0.0
+    gesture: str = ""
+    gesture_score: float = 0.0
+    confidences: dict[str, float] = Field(default_factory=dict)
+    unreliable: list[str] = Field(default_factory=list, description="不可靠/缺失的特征字段")
+    notes: list[str] = Field(default_factory=list)
+    ita_degrees: float = 0.0
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    preview: str | None = None
+
+
+class RecommendFromImageRequest(VisionExtractRequest):
+    free_text: str | None = Field(default=None, description="用户自由描述")
+    use_llm: bool = Field(default=False, description="是否用大模型生成理由")
+
+
+class RecommendFromImageResponse(RecommendResponse):
+    vision: dict[str, Any] = Field(default_factory=dict, description="视觉层元信息（质量/置信度）")

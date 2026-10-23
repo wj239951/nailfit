@@ -7,14 +7,17 @@ API 层（api/routes.py）和命令行（scripts/demo.py）都只调用这里，
 - 款式库为空/数据损坏 → EmptyStyleLibraryError（API 映射 503）
 - 过滤后没有候选、候选不足 3 款 → NoCandidateError（API 映射 422）
 - 输出契约失败 → ContractError（由 validator 抛出，API 映射 502）
+- 手照质量不达标/视觉特征不全 → VisionUnusableError（API 映射 422，前端转手工录入）
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from .data import load_styles, load_taxonomy
-from .errors import EmptyStyleLibraryError, NoCandidateError
+from .errors import EmptyStyleLibraryError, NoCandidateError, VisionUnusableError
 from .explainer import explain
-from .features import HandFeatures
+from .features import HandFeatures, FeatureError
 from .retriever import SemanticScorer
 from .rules import RuleEngine, normalize
 from .selector import Scored, pick_three, rank
@@ -124,3 +127,103 @@ def recommend(
             "engine": "rules+explain",
         },
     }
+
+
+# --------------------------------------------------------------------------- 视觉层入口（M8/M9）
+def features_from_image(
+    image_path: str | Path,
+    *,
+    scene: str = "commute",
+    overrides: dict[str, str] | None = None,
+    model_path: str | Path | None = None,
+    auto_download: bool = False,
+    preview: bool = True,
+) -> tuple[dict[str, str], dict]:
+    """手照 → (可能不全的特征 dict, 视觉元信息)。
+
+    照片质量不达标时 `meta["quality"]` 不是 "ok"，特征会缺项（对应字段列在
+    `meta["unreliable"]`），调用方应把缺的项交给用户手工补（M11），而不是硬猜。
+    """
+    from . import vision  # 延迟导入：mediapipe / opencv 是可选依赖
+
+    result = vision.extract(
+        image_path,
+        model_path=model_path,
+        preview=preview,
+        auto_download=auto_download,
+    )
+    payload: dict[str, str] = dict(result.features)
+    for field in result.unreliable:
+        payload.pop(field, None)
+    for key, value in (overrides or {}).items():
+        payload[str(key)] = str(value)  # 人工修正优先于视觉结果
+    payload["scene"] = scene
+    if "ita_degrees" in result.metrics:
+        payload["ita_degrees"] = round(float(result.metrics["ita_degrees"]), 1)
+
+    meta = {
+        "image": str(image_path),
+        "quality": result.quality,
+        "handedness": result.observation.handedness,
+        "handedness_score": round(result.observation.handedness_score, 3),
+        "gesture": result.observation.gesture,
+        "gesture_score": round(result.observation.gesture_score, 3),
+        "confidences": dict(result.confidences),
+        "unreliable": list(result.unreliable),
+        "notes": list(result.notes),
+        "ita_degrees": round(float(result.metrics.get("ita_degrees", 0.0)), 1),
+        "metrics": {key: round(value, 3) for key, value in result.metrics.items()},
+        "preview": str(result.preview) if result.preview else None,
+    }
+    return payload, meta
+
+
+def recommend_from_image(
+    image_path: str | Path,
+    *,
+    scene: str = "commute",
+    use_llm: bool = False,
+    free_text: str | None = None,
+    overrides: dict[str, str] | None = None,
+    model_path: str | Path | None = None,
+    auto_download: bool = False,
+    preview: bool = True,
+    styles: tuple[dict, ...] | list[dict] | None = None,
+    engine: RuleEngine | None = None,
+    semantic: SemanticScorer | None = None,
+) -> dict:
+    """手照直接出推荐（M9）；质量不达标或缺特征时抛 VisionUnusableError。"""
+    payload, vision_meta = features_from_image(
+        image_path,
+        scene=scene,
+        overrides=overrides,
+        model_path=model_path,
+        auto_download=auto_download,
+        preview=preview,
+    )
+    missing = [field for field in vision_meta.get("unreliable", []) if field not in payload]
+    if missing or vision_meta.get("quality") == "low":
+        detail = "、".join(missing) if missing else "照片质量过低"
+        raise VisionUnusableError(
+            f"这张照片没能可靠地给出这些特征：{detail}。"
+            "请按 README「拍图规范」重拍（手背朝上、五指张开、指尖朝镜头），"
+            "或改用「手工录入」功能补齐缺项。"
+        )
+    try:
+        features = HandFeatures.from_dict(payload)
+    except FeatureError as exc:
+        raise VisionUnusableError(
+            f"这张照片只识别出一部分特征（{exc}）。请按 README 手照规范重拍，"
+            "或改用手工录入补齐缺项。"
+        ) from exc
+
+    result = recommend(
+        features,
+        free_text=free_text,
+        use_llm=use_llm,
+        styles=styles,
+        engine=engine,
+        semantic=semantic,
+    )
+    result["vision"] = vision_meta
+    return result

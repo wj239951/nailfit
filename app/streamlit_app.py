@@ -1,4 +1,4 @@
-"""NailFit 的 Streamlit 前端：填 7 项特征 → 三张推荐卡。
+"""NailFit 的 Streamlit 前端：手照识别 或 手工填 7 项特征 → 三张推荐卡。
 
 启动：
 
@@ -7,10 +7,12 @@
 
 页面只做展示与交互，特征校验、推荐编排、视图整理分别复用
 core.features / core.pipeline / core.ui_view，和 CLI、FastAPI 行为一致。
+手照识别（M8/M9）复用 core.vision，mediapipe 是可选依赖。
 """
 
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 
@@ -20,9 +22,11 @@ if str(ROOT) not in sys.path:
 
 import streamlit as st  # noqa: E402
 
+from core import vision  # noqa: E402
 from core.errors import NailFitError  # noqa: E402
 from core.features import FeatureError  # noqa: E402
 from core.labels import FIELD_TITLES, label, summarize  # noqa: E402
+from core.pipeline import features_from_image  # noqa: E402
 from core.presets import (  # noqa: E402
     DEFAULTS,
     FEATURE_FIELDS,
@@ -43,6 +47,15 @@ st.set_page_config(page_title="NailFit · 手型美甲推荐", page_icon="💅",
 
 CUSTOM_PRESET = "自定义"
 LIBRARIES = library_choices()
+UPLOAD_DIR = ROOT / "static" / "preview" / "_uploads"
+MODE_MANUAL = "手动选择特征"
+MODE_VISION = "手照识别"
+QUALITY_TEXT = {
+    "ok": "✅ 标准手背照",
+    "clenched": "⚠️ 握拳/手指弯曲：甲面特征不可靠",
+    "pose": "⚠️ 手指朝向镜头/侧位：甲面特征不可靠",
+    "low": "⚠️ 手太小或检测置信度低",
+}
 
 
 def _init_state() -> None:
@@ -50,8 +63,16 @@ def _init_state() -> None:
     st.session_state.setdefault("error", None)
     st.session_state.setdefault("preset", CUSTOM_PRESET)
     st.session_state.setdefault("lib_label", LIBRARIES[0][0] if LIBRARIES else "")
+    st.session_state.setdefault("input_mode", MODE_MANUAL)
+    st.session_state.setdefault("vision_payload", None)
+    st.session_state.setdefault("vision_meta", None)
+    st.session_state.setdefault("vision_image", None)
+    st.session_state.setdefault("vision_error", None)
+    st.session_state.setdefault("vision_scene", "commute")
+    st.session_state.setdefault("vision_upload_name", None)
     for field in FEATURE_FIELDS:
         st.session_state.setdefault(f"sel_{field}", DEFAULTS[field])
+        st.session_state.setdefault(f"fix_{field}", DEFAULTS[field])
 
 
 def _on_preset_change() -> None:
@@ -73,15 +94,17 @@ def _selection() -> dict[str, str]:
     return {field: st.session_state[f"sel_{field}"] for field in FEATURE_FIELDS}
 
 
+def _styles_path() -> str | None:
+    return dict(LIBRARIES).get(st.session_state.get("lib_label") or "")
+
+
 def _run() -> None:
-    lib_label = st.session_state.get("lib_label") or ""
-    styles_path = dict(LIBRARIES).get(lib_label)
     try:
         payload = generate(
             _selection(),
             free_text=st.session_state.get("free_text", ""),
             use_llm=bool(st.session_state.get("use_llm", False)),
-            styles_path=styles_path,
+            styles_path=_styles_path(),
         )
     except (NailFitError, ContractError, FeatureError, ValueError) as exc:
         st.session_state.payload = None
@@ -91,11 +114,184 @@ def _run() -> None:
         st.session_state.error = None
 
 
+# ---------------------------------------------------------------- 手照识别
+def _save_upload(uploaded) -> Path:
+    data = uploaded.getvalue()
+    digest = hashlib.sha1(data).hexdigest()[:12]
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    suffix = Path(uploaded.name).suffix.lower() or ".jpg"
+    target = UPLOAD_DIR / f"hand_{digest}{suffix}"
+    target.write_bytes(data)
+    return target
+
+
+def _download_model() -> None:
+    try:
+        with st.spinner("下载手势模型（约 8MB）…"):
+            vision.ensure_model(download=True)
+    except (NailFitError, OSError) as exc:
+        st.session_state.vision_error = f"模型下载失败：{exc}"
+    else:
+        st.session_state.vision_error = None
+    st.rerun()
+
+
+def _analyze_hand() -> None:
+    image_path = st.session_state.get("vision_image")
+    if not image_path:
+        st.session_state.vision_error = "先在左侧上传一张手照"
+        return
+    try:
+        payload, meta = features_from_image(
+            image_path,
+            scene=st.session_state.get("vision_scene", "commute"),
+            auto_download=False,
+        )
+    except (NailFitError, ValueError, OSError) as exc:
+        st.session_state.vision_payload = None
+        st.session_state.vision_meta = None
+        st.session_state.vision_error = str(exc)
+    else:
+        st.session_state.vision_payload = payload
+        st.session_state.vision_meta = meta
+        st.session_state.vision_error = None
+        st.session_state.payload = None
+
+
+def _vision_selection() -> dict[str, str]:
+    """视觉特征 + 用户对不可靠字段的修正（M11 回退）。"""
+    payload = dict(st.session_state.get("vision_payload") or {})
+    meta = st.session_state.get("vision_meta") or {}
+    for field in meta.get("unreliable", []):
+        payload[field] = st.session_state.get(f"fix_{field}", DEFAULTS[field])
+    payload["scene"] = st.session_state.get("vision_scene", payload.get("scene", "commute"))
+    return payload
+
+
+def _run_vision() -> None:
+    try:
+        payload = generate(
+            _vision_selection(),
+            free_text=st.session_state.get("free_text", ""),
+            use_llm=bool(st.session_state.get("use_llm", False)),
+            styles_path=_styles_path(),
+        )
+    except (NailFitError, ContractError, FeatureError, ValueError) as exc:
+        st.session_state.payload = None
+        st.session_state.error = str(exc)
+    else:
+        st.session_state.payload = payload
+        st.session_state.error = None
+
+
+def render_vision_sidebar() -> None:
+    status = vision.model_status()
+    if status["installed"]:
+        st.success(f"手部模型就绪（{status['size_mb']} MB）")
+    else:
+        st.warning("手部模型还没下载（约 8MB）")
+        st.button("下载模型", type="primary", on_click=_download_model, use_container_width=True)
+
+    st.selectbox(
+        "场景",
+        list(SCENARIOS),
+        format_func=lambda name: f"{SCENARIO_LABELS[name]}（{name}）",
+        key="vision_scene",
+        help="场景从手照里推断不出来，需要手动选",
+    )
+
+    uploaded = st.file_uploader("上传手照", type=["jpg", "jpeg", "png"], key="vision_upload")
+    if uploaded is not None and uploaded.name != st.session_state.get("vision_upload_name"):
+        path = _save_upload(uploaded)
+        st.session_state.vision_image = str(path)
+        st.session_state.vision_upload_name = uploaded.name
+        st.session_state.vision_payload = None
+        st.session_state.vision_meta = None
+        st.session_state.vision_error = None
+
+    if st.session_state.get("vision_image"):
+        st.image(st.session_state["vision_image"], caption="已上传手照", width=220)
+
+    st.button("识别手部特征", type="primary", on_click=_analyze_hand, use_container_width=True)
+    st.caption("拍法：手背朝上、五指自然张开、指尖朝镜头、整只手入画、光线均匀。握拳/侧位照片只会给出肤色。")
+
+
+def render_vision_area() -> None:
+    st.title("NailFit · 手照识别")
+    st.write(
+        "上传一张手背照，自动提取 **甲床比例 / 甲型 / 甲长 / 肤色 / 手型**，"
+        "再走和手工录入同一套规则引擎给出三档推荐。"
+    )
+
+    vision_error = st.session_state.get("vision_error")
+    meta = st.session_state.get("vision_meta")
+    payload = st.session_state.get("vision_payload")
+
+    if vision_error:
+        st.error(f"手照识别失败：{vision_error}")
+    if not meta:
+        st.info("在左侧上传手照并点击 **识别手部特征**；也可以用左边的「手动选择特征」直接开始。")
+        return
+
+    quality = str(meta.get("quality"))
+    st.markdown(
+        f"**照片质量**：{QUALITY_TEXT.get(quality, quality)} · "
+        f"左右手 {meta.get('handedness')} · 手势 {meta.get('gesture')} · "
+        f"ITA° {meta.get('ita_degrees')}"
+    )
+    if payload:
+        st.caption("识别结果：" + summarize(payload))
+
+    unreliable = meta.get("unreliable") or []
+    if unreliable:
+        st.warning(
+            "这些特征从这张照片里不可靠，请手动补一下：" + "、".join(FIELD_TITLES.get(f, f) for f in unreliable)
+        )
+        enums = feature_options()
+        columns = st.columns(min(3, len(unreliable)))
+        for index, field in enumerate(unreliable):
+            with columns[index % len(columns)]:
+                st.selectbox(
+                    FIELD_TITLES.get(field, field),
+                    enums[field],
+                    format_func=lambda value, f=field: f"{label(f, value)}（{value}）",
+                    key=f"fix_{field}",
+                )
+
+    with st.expander("视觉细节（关键点标注 / 原始几何量）"):
+        preview = meta.get("preview")
+        if preview and Path(str(preview)).exists():
+            st.image(str(preview), caption="关键点标注图")
+        st.json(
+            {
+                "confidences": meta.get("confidences", {}),
+                "metrics": meta.get("metrics", {}),
+                "notes": meta.get("notes", []),
+            },
+            expanded=False,
+        )
+
+    st.button("用这组特征推荐", type="primary", on_click=_run_vision, use_container_width=False)
+
+    error = st.session_state.get("error")
+    payload = st.session_state.get("payload")
+    if error:
+        st.error(f"推荐失败：{error}")
+        st.info("可以调整上面不可靠的字段，或换一个款式库再试。")
+    elif payload:
+        render_result(payload)
+
+
 # ---------------------------------------------------------------- 侧边栏
 def render_sidebar() -> None:
     with st.sidebar:
         st.markdown("## 💅 NailFit")
         st.caption("手型美甲推荐 · 规则驱动 + 可解释理由")
+        st.radio("输入方式", [MODE_MANUAL, MODE_VISION], key="input_mode", horizontal=True)
+
+        if st.session_state.get("input_mode") == MODE_VISION:
+            render_vision_sidebar()
+            return
 
         st.selectbox(
             "场景预设",
@@ -195,10 +391,7 @@ def render_result(payload: dict) -> None:
         st.code(payload_json(payload), language="json")
 
 
-def main() -> None:
-    _init_state()
-    render_sidebar()
-
+def render_manual_area() -> None:
     st.title("NailFit · 手型美甲推荐")
     st.write(
         "从 7 项手部特征出发，用规则引擎 + 款式库检索给出 **稳妥 / 亮点 / 大胆** 三档推荐，"
@@ -219,6 +412,16 @@ def main() -> None:
             "还没有直觉？先试这几个预设：\n"
             + "\n".join(f"- **{SCENARIO_LABELS[name]}** — `{name}`" for name in SCENARIOS)
         )
+
+
+def main() -> None:
+    _init_state()
+    render_sidebar()
+
+    if st.session_state.get("input_mode") == MODE_VISION:
+        render_vision_area()
+    else:
+        render_manual_area()
 
     st.divider()
     st.caption(

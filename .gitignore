@@ -17,7 +17,9 @@ __pycache__/
 .env
 chroma_db/
 raw_images/
+raw_hands/
 *.log
+out_*.json
 
 # 演示图片（仅本地演示用，不进仓库）
 static/demo/
@@ -29,3 +31,7 @@ static/demo/
 
 # 本地生成的预览图
 static/styles/_preview/
+static/preview/
+
+# MediaPipe 模型（约 8MB，用 scripts/vision_demo.py --download-model 下载）
+models/
