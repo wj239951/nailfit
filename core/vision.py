@@ -71,22 +71,28 @@ MIN_FINGER_TRAVEL = 0.55
 # 手掌透视：掌宽/掌长超过这个值，说明手朝镜头/侧位，2D 量甲面没有意义
 MAX_PALM_RATIO = 1.35
 
-# 手型阈值：palm_width / palm_length（M12 用真实数据校准）
-HAND_TYPE_THRESHOLDS = (0.82, 0.98)   # <0.82 slim，<0.98 standard，其余 fleshy
+# M12 第一版校准（2026-10-23，6 张标准手背照、同一只手）：
+# 2D 掌宽/掌长在同一只手上也会波动 ±0.09，所以手型只做宽档判断，边界留足余量。
+HAND_TYPE_THRESHOLDS = (0.88, 1.05)   # <0.88 slim，<1.05 standard，其余 fleshy
 
-# 甲床比例阈值：nail_width / nail_length
-NAIL_BED_THRESHOLDS = (0.75, 0.95)    # <0.75 slender，<0.95 standard，其余 short_wide
+# 甲床比例阈值：aspect = nail_width / nail_length（M12 校准：自然甲样本 0.76–0.85 → 标准档）
+NAIL_BED_THRESHOLDS = (0.72, 0.95)    # <0.72 slender，<0.95 standard，其余 short_wide
 
 # 甲型阈值（taper = tip_width / dip_width；aspect = nail_width / nail_length）
-TAPER_ALMOND = 0.72
-TAPER_SQUARE = 0.90
-ASPECT_SQUARE = 0.88
-ASPECT_SQUOVAL = 0.80
-ASPECT_ROUND = 0.72
+# 校准思路：指尖收得越厉害越尖（almond/oval），收得少 + 甲面偏宽 → square；中间灰度 → squoval。
+TAPER_ALMOND = 0.78
+TAPER_SQUARE = 0.92
+ASPECT_SQUARE = 0.90
+SHAPE_SQUOVAL_TAPER = 0.88
+SHAPE_ROUND_ASPECT = 0.82
 
 # 甲长阈值：nail_length / dip_width
-LENGTH_VERY_SHORT = 0.85
+LENGTH_VERY_SHORT = 0.75
 LENGTH_MID = 1.10
+
+# 像素量 → 解剖量的两个折算系数（M12 校准；甲板约占远节指节 85%，甲宽约为该处指宽 85%）
+NAIL_LENGTH_FACTOR = 0.85
+NAIL_WIDTH_FACTOR = 0.85
 
 
 class VisionError(NailFitError):
@@ -204,18 +210,30 @@ def nail_bed_ratio(nail_width: float, nail_length: float) -> str:
     return "short_wide"
 
 
+def classify_nail_bed(aspect: float) -> str:
+    """按 aspect（= 折算后的甲宽/甲长）分甲床比例（M12 校准入口）。"""
+    if aspect <= 0:
+        return "standard"
+    slender, standard = NAIL_BED_THRESHOLDS
+    if aspect < slender:
+        return "slender"
+    if aspect < standard:
+        return "standard"
+    return "short_wide"
+
+
 def classify_shape(aspect: float, taper: float) -> str:
-    """甲型分类：aspect=甲宽/甲长，taper=指尖宽/甲根宽。"""
-    if aspect <= 0 or taper <= 0:
+    """甲型分类：aspect=甲宽/甲长，taper=指尖宽/甲根宽（M12 校准后以 taper 为主）。"""
+    if taper <= 0:
         return "oval"
     if taper < TAPER_ALMOND:
         return "almond"
     if aspect >= ASPECT_SQUARE and taper >= TAPER_SQUARE:
         return "square"
-    if aspect >= ASPECT_SQUOVAL:
-        return "squoval"
-    if aspect >= ASPECT_ROUND:
+    if aspect < SHAPE_ROUND_ASPECT:
         return "round"
+    if taper >= SHAPE_SQUOVAL_TAPER:
+        return "squoval"
     return "oval"
 
 
@@ -370,10 +388,16 @@ def _recognizer(model_path: Path, num_hands: int = 2, min_confidence: float = 0.
 
 
 def _load_rgb(image_path: str | Path):
+    """读图；用 read_bytes + imdecode，兼容中文/空格路径（cv2.imread 在 Windows 上会读不到）。"""
     cv2, np = _require_imaging()
-    bgr = cv2.imread(str(image_path))
+    path = Path(image_path)
+    try:
+        data = path.read_bytes()
+    except OSError as exc:  # 文件不存在/无权限
+        raise VisionError(f"图片读不出来：{path}（{exc}）") from exc
+    bgr = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR) if data else None
     if bgr is None:
-        raise VisionError(f"图片读不出来：{image_path}")
+        raise VisionError(f"图片读不出来：{path}")
     return cv2, np, bgr
 
 
@@ -388,10 +412,13 @@ def detect_hand(
         raise VisionError(f"图片不存在：{path}")
     model = ensure_model(model_path, download=auto_download)
     mp, _, _ = _require_mediapipe()
-    cv2, _, bgr = _load_rgb(path)
+    cv2, np, bgr = _load_rgb(path)
     height, width = bgr.shape[:2]
 
-    image = mp.Image.create_from_file(str(path))
+    image = mp.Image(
+        image_format=mp.ImageFormat.SRGB,
+        data=np.ascontiguousarray(bgr[:, :, ::-1]),
+    )
     result = _recognizer(model, num_hands=2).recognize(image)
     if not result.hand_landmarks:
         raise VisionError(f"没检测到手：{path.name}（手要完整入镜、光线充足）")
@@ -436,10 +463,10 @@ def _skin_mask(cv2, np, bgr):
 
 
 def _width_at_point(np, mask, point: tuple[float, float], axis: tuple[float, float],
-                    max_half: int = 45) -> float:
-    """沿垂直于手指轴线的方向，量穿过 point 的肤色连续区间长度（像素）。
+                    max_half: int = 160) -> float:
+    """沿垂直于手指轴线的方向，量穿过 point 的连续区间长度（像素）。
 
-    point 不在肤色掩膜上时，先在附近找最近的肤色像素再量（关键点常压在指甲/高光上）。
+    两侧分开累计（不是取两侧最大值），point 不在掩膜上时先在附近找最近的前景点。
     """
     height, width = mask.shape[:2]
 
@@ -450,7 +477,7 @@ def _width_at_point(np, mask, point: tuple[float, float], axis: tuple[float, flo
     px, py = point
     if not skin(px, py):
         found = None
-        for radius in (2, 4, 6, 8, 10, 12):
+        for radius in (2, 4, 6, 8, 10, 12, 14):
             for dx in range(-radius, radius + 1, 2):
                 for dy in range(-radius, radius + 1, 2):
                     if skin(px + dx, py + dy):
@@ -465,18 +492,81 @@ def _width_at_point(np, mask, point: tuple[float, float], axis: tuple[float, flo
         px, py = found
 
     perp_x, perp_y = -axis[1], axis[0]
-    half = 0.0
-    for sign in (1.0, -1.0):
+
+    def run(sign: float) -> float:
         step = 1.0
         while step <= max_half and skin(px + perp_x * step * sign, py + perp_y * step * sign):
-            half = step
             step += 1.0
-    return 2.0 * half + 1.0
+        return step - 1.0
+
+    return run(1.0) + run(-1.0) + 1.0
+
+
+def _hand_mask(cv2, np, bgr, observation: HandObservation):
+    """GrabCut 整手掩膜：关键点骨架做前景种子，图像边框做背景种子。
+
+    纯肤色阈值会把地板/牛仔裤/袖子并进来，导致"宽度"饱和到固定值（M12 实测 bug）。
+    """
+    height, width = bgr.shape[:2]
+    mask = np.full((height, width), cv2.GC_PR_BGD, dtype=np.uint8)
+    border = max(3, int(min(height, width) * 0.02))
+    mask[:border, :] = cv2.GC_BGD
+    mask[-border:, :] = cv2.GC_BGD
+    mask[:, :border] = cv2.GC_BGD
+    mask[:, -border:] = cv2.GC_BGD
+    landmarks = observation.landmarks
+    chains = (
+        (0, 5, 9, 13, 17),
+        (0, 1, 2, 3, 4),
+        (5, 6, 7, 8),
+        (9, 10, 11, 12),
+        (13, 14, 15, 16),
+        (17, 18, 19, 20),
+    )
+    for chain in chains:
+        for a, b in zip(chain[:-1], chain[1:]):
+            cv2.line(
+                mask,
+                (int(landmarks[a][0]), int(landmarks[a][1])),
+                (int(landmarks[b][0]), int(landmarks[b][1])),
+                cv2.GC_PR_FGD,
+                9,
+            )
+    bgd_model = np.zeros((1, 65), np.float64)
+    fgd_model = np.zeros((1, 65), np.float64)
+    try:
+        cv2.grabCut(bgr, mask, None, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_MASK)
+    except cv2.error:  # pragma: no cover - 图像类型/尺寸异常时退化
+        return None
+    return np.where((mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD), 255, 0).astype(np.uint8)
+
+
+def _median(values: list[float]) -> float:
+    ordered = sorted(values)
+    count = len(ordered)
+    if not count:
+        return 0.0
+    middle = count // 2
+    if count % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2.0
+
+
+def _robust_mean(values: list[float]) -> float:
+    """中位数剔掉离群值后求均值（相邻手指粘连时会量出超大宽度）。"""
+    med = _median(values)
+    if med <= 0:
+        return 0.0
+    kept = [value for value in values if 0.6 * med <= value <= 1.5 * med] or values
+    return sum(kept) / len(kept)
 
 
 def measure_fingers(cv2, np, bgr, observation: HandObservation) -> dict[str, float]:
-    """量指宽/甲宽/甲长等像素量（握拳时数值不可信，由 quality_gate 负责标注）。"""
-    mask = _skin_mask(cv2, np, bgr)
+    """量指宽/甲宽/甲长等像素量（M12：GrabCut 手部掩膜 + 双向量宽 + 中位数聚合）。"""
+    mask = _hand_mask(cv2, np, bgr, observation)
+    if mask is None:  # 退化到肤色掩膜：精度差，但至少能出数
+        mask = _skin_mask(cv2, np, bgr)
+    image_width = bgr.shape[1]
     landmarks = observation.landmarks
     dip_widths: list[float] = []
     nail_widths: list[float] = []
@@ -499,20 +589,26 @@ def measure_fingers(cv2, np, bgr, observation: HandObservation) -> dict[str, flo
         dip_w = _width_at_point(np, mask, dip_point, axis)
         nail_w = _width_at_point(np, mask, nail_mid, axis)
         tip_w = _width_at_point(np, mask, tip_mid, axis)
-        if dip_w > 2 and nail_w > 2:
+        # 单指校验：宽度太离谱说明掩膜漏到了相邻手指/背景，直接丢掉这根手指
+        if min(dip_w, nail_w) > 2 and max(dip_w, nail_w, tip_w) < 0.22 * image_width:
             dip_widths.append(dip_w)
             nail_widths.append(nail_w)
             tip_widths.append(tip_w if tip_w > 2 else nail_w)
-            nail_lengths.append(max(1.0, distance(dip_point, tip_point)))
+            nail_lengths.append(distance(dip_point, tip_point))
 
     metrics: dict[str, float] = {}
     if dip_widths:
-        metrics["dip_width_px"] = sum(dip_widths) / len(dip_widths)
-        metrics["nail_width_px"] = sum(nail_widths) / len(nail_widths)
-        metrics["tip_width_px"] = sum(tip_widths) / len(tip_widths)
-        metrics["nail_length_px"] = sum(nail_lengths) / len(nail_lengths)
-        metrics["aspect"] = metrics["nail_width_px"] / max(1.0, metrics["nail_length_px"])
-        metrics["taper"] = metrics["tip_width_px"] / max(1.0, metrics["dip_width_px"])
+        metrics["dip_width_px"] = round(_robust_mean(dip_widths), 1)
+        metrics["nail_width_px"] = round(_robust_mean(nail_widths), 1)
+        metrics["tip_width_px"] = round(_robust_mean(tip_widths), 1)
+        metrics["nail_length_px"] = round(NAIL_LENGTH_FACTOR * _robust_mean(nail_lengths), 1)
+        metrics["aspect"] = round(
+            NAIL_WIDTH_FACTOR * metrics["nail_width_px"] / max(1.0, metrics["nail_length_px"]), 3
+        )
+        metrics["taper"] = round(metrics["tip_width_px"] / max(1.0, metrics["dip_width_px"]), 3)
+        # 整体校验：量出来的比例明显不属于人手甲面 → 视为没量到（交给下拉补选）
+        if not (0.4 <= metrics["aspect"] <= 1.6 and 0.4 <= metrics["taper"] <= 1.2):
+            return {}
     return metrics
 
 
@@ -646,7 +742,10 @@ def draw_preview(cv2, np, bgr, observation: HandObservation, result_features: di
         y0 += 38
 
     preview_path.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(preview_path), canvas)
+    # 用 imencode + 字节写入，兼容中文路径
+    encoded, buffer = cv2.imencode(preview_path.suffix or ".jpg", canvas)
+    if encoded:
+        preview_path.write_bytes(buffer.tobytes())
     return preview_path
 
 
@@ -708,9 +807,7 @@ def extract(
     finger_metrics = measure_fingers(cv2, np, bgr, observation)
     metrics.update(finger_metrics)
     if quality == "ok" and "nail_width_px" in finger_metrics:
-        features["nail_bed_ratio"] = nail_bed_ratio(
-            finger_metrics["nail_width_px"], finger_metrics["nail_length_px"]
-        )
+        features["nail_bed_ratio"] = classify_nail_bed(finger_metrics.get("aspect", 0.0))
         features["nail_shape"] = classify_shape(
             finger_metrics.get("aspect", 0.0), finger_metrics.get("taper", 0.0)
         )

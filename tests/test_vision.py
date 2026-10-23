@@ -18,7 +18,11 @@ from core.vision import (
     HandObservation,
     classify_hand_type,
     classify_length,
+    classify_nail_bed,
     classify_shape,
+    _median,
+    _robust_mean,
+    _width_at_point,
     finger_extension,
     finger_travel,
     nail_bed_ratio,
@@ -222,3 +226,55 @@ def test_ensure_model_raises_when_missing(scratch_dir):
 
 def test_vision_error_is_naiffit_error():
     assert issubclass(vision.VisionError, NailFitError)
+
+
+# --------------------------------------------------------------------------- M12 量测回归
+def test_width_at_point_sums_both_directions():
+    """宽度要两侧分别走，不能只取一侧最大（M12 修掉的饱和 bug）。"""
+    import numpy as np
+
+    mask = np.zeros((60, 100), dtype=np.uint8)
+    mask[20:41, 5:95] = 255  # 21px 高的一条带
+    assert _width_at_point(np, mask, (50.0, 30.0), (1.0, 0.0)) == 21.0
+
+
+def test_width_at_point_snaps_to_nearest_foreground():
+    import numpy as np
+
+    mask = np.zeros((60, 100), dtype=np.uint8)
+    mask[20:41, 5:95] = 255
+    # (50, 10) 在带外，但 14px 内能吸附到带子上
+    assert _width_at_point(np, mask, (50.0, 10.0), (1.0, 0.0)) == 21.0
+
+
+def test_width_at_point_stops_at_mask_boundary():
+    import numpy as np
+
+    mask = np.zeros((60, 100), dtype=np.uint8)
+    mask[20:41, 5:45] = 255  # 半宽 20
+    assert _width_at_point(np, mask, (25.0, 30.0), (1.0, 0.0)) == 21.0
+
+
+def test_width_at_point_returns_zero_outside_mask():
+    import numpy as np
+
+    mask = np.zeros((60, 100), dtype=np.uint8)
+    assert _width_at_point(np, mask, (50.0, 30.0), (1.0, 0.0)) == 0.0
+
+
+def test_median_handles_even_and_odd():
+    assert _median([3.0]) == 3.0
+    assert _median([1.0, 3.0]) == 2.0
+    assert _median([5.0, 1.0, 3.0]) == 3.0
+
+
+def test_robust_mean_drops_outlier():
+    assert _robust_mean([80.0, 82.0, 200.0]) == pytest.approx(81.0)
+    assert _robust_mean([]) == 0.0
+
+
+def test_classify_nail_bed_uses_aspect():
+    assert classify_nail_bed(0.6) == "slender"
+    assert classify_nail_bed(0.8) == "standard"
+    assert classify_nail_bed(1.1) == "short_wide"
+    assert classify_nail_bed(0.0) == "standard"
