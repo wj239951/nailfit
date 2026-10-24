@@ -96,27 +96,28 @@
     },
     {
       "id": "d004",
-      "name": "蓝绿 · 纯色椭圆",
+      "name": "橄榄绿 · 纯色短方",
       "image": "static/demo/demo04_olive_green.jpg",
       "shape": [
-        "oval",
+        "square",
         "squoval",
-        "almond"
+        "round"
       ],
       "color_family": "blue_green",
       "tone": "warm",
-      "value": "light",
+      "value": "mid",
       "saturation": "mid",
       "style": "solid",
-      "length_fit": "mid",
+      "length_fit": "short",
       "nail_bed_fit": [
         "standard",
         "short_wide"
       ],
       "scene": [
+        "commute",
         "y2k"
       ],
-      "hue": 18.4,
+      "hue": 95,
       "tags": [
         "清新"
       ],
@@ -164,7 +165,7 @@
       "value": "light",
       "saturation": "mid",
       "style": "gradient",
-      "length_fit": "long",
+      "length_fit": "mid",
       "nail_bed_fit": [
         "standard",
         "slender"
@@ -214,49 +215,52 @@
     },
     {
       "id": "d008",
-      "name": "正红 · 纯色椭圆",
+      "name": "暖黄 · 渐变手绘",
       "image": "static/demo/demo08_yellow_daisy.jpg",
       "shape": [
+        "round",
         "oval",
-        "squoval",
-        "almond"
+        "squoval"
       ],
-      "color_family": "true_red",
+      "color_family": "orange_brown",
       "tone": "warm",
       "value": "light",
       "saturation": "mid",
-      "style": "solid",
-      "length_fit": "mid",
+      "style": "gradient",
+      "length_fit": "short",
       "nail_bed_fit": [
         "standard",
-        "short_wide"
+        "short_wide",
+        "slender"
       ],
       "scene": [
-        "festival"
+        "commute",
+        "date"
       ],
-      "hue": 12.6,
+      "hue": 50,
       "tags": [
-        "显白"
+        "显白",
+        "清新"
       ],
       "autotag": true
     },
     {
       "id": "d009",
-      "name": "闪片 · 闪粉椭圆",
+      "name": "闪片 · 闪粉短甲",
       "image": "static/demo/demo09_glitter_cartoon.jpg",
       "shape": [
-        "oval",
-        "squoval",
-        "almond"
+        "round",
+        "squoval"
       ],
       "color_family": "glitter",
       "tone": "warm",
       "value": "light",
       "saturation": "mid",
       "style": "glitter",
-      "length_fit": "long",
+      "length_fit": "short",
       "nail_bed_fit": [
         "standard",
+        "short_wide",
         "slender"
       ],
       "scene": [
@@ -310,7 +314,7 @@
       ],
       "color_family": "blue_green",
       "tone": "warm",
-      "value": "mid",
+      "value": "light",
       "saturation": "mid",
       "style": "glitter",
       "length_fit": "long",
@@ -322,7 +326,7 @@
         "festival",
         "y2k"
       ],
-      "hue": 17.1,
+      "hue": 205,
       "tags": [
         "清新",
         "梦幻"
@@ -448,7 +452,7 @@
     },
     {
       "id": "d016",
-      "name": "闪片 · 闪粉椭圆",
+      "name": "银白 · 格纹闪片",
       "image": "static/demo/demo16_glitter_checker.jpg",
       "shape": [
         "oval",
@@ -459,7 +463,7 @@
       "tone": "warm",
       "value": "mid",
       "saturation": "low",
-      "style": "glitter",
+      "style": "checker",
       "length_fit": "long",
       "nail_bed_fit": [
         "standard",
@@ -468,7 +472,7 @@
       "scene": [
         "festival"
       ],
-      "hue": 31.6,
+      "hue": 45,
       "tags": [
         "梦幻"
       ],
@@ -563,16 +567,16 @@
     },
     {
       "id": "d020",
-      "name": "暖棕 · 法式椭圆",
+      "name": "裸粉 · 法式长甲",
       "image": "static/demo/demo20_french_bow_long.jpg",
       "shape": [
         "oval",
         "squoval",
         "almond"
       ],
-      "color_family": "orange_brown",
+      "color_family": "nude_pink",
       "tone": "warm",
-      "value": "mid",
+      "value": "light",
       "saturation": "low",
       "style": "french",
       "length_fit": "long",
@@ -584,7 +588,7 @@
         "commute",
         "wedding"
       ],
-      "hue": 32.3,
+      "hue": 25,
       "tags": [
         "通勤"
       ],
@@ -622,15 +626,15 @@
     },
     {
       "id": "d022",
-      "name": "裸粉 · 纯色椭圆",
+      "name": "裸杏 · 纯色椭圆",
       "image": "static/demo/demo22_nude_beige_oval.jpg",
       "shape": [
         "oval",
         "almond"
       ],
       "color_family": "nude_pink",
-      "tone": "cool",
-      "value": "deep",
+      "tone": "warm",
+      "value": "light",
       "saturation": "low",
       "style": "solid",
       "length_fit": "mid",
@@ -642,7 +646,7 @@
         "commute",
         "date"
       ],
-      "hue": 150.0,
+      "hue": 30,
       "tags": [
         "显白",
         "通勤"
@@ -710,7 +714,7 @@
     },
     {
       "id": "d025",
-      "name": "蓝绿 · 纯色椭圆",
+      "name": "粉蓝 · 渐变椭圆",
       "image": "static/demo/demo25_pastel_pink_blue.jpg",
       "shape": [
         "oval",
@@ -718,10 +722,10 @@
         "almond"
       ],
       "color_family": "blue_green",
-      "tone": "warm",
-      "value": "mid",
+      "tone": "cool",
+      "value": "light",
       "saturation": "mid",
-      "style": "solid",
+      "style": "gradient",
       "length_fit": "mid",
       "nail_bed_fit": [
         "standard",
@@ -730,7 +734,7 @@
       "scene": [
         "y2k"
       ],
-      "hue": 11.0,
+      "hue": 210,
       "tags": [
         "清新"
       ],
@@ -1185,7 +1189,7 @@
       "value": "light",
       "saturation": "low",
       "style": "solid",
-      "length_fit": "mid",
+      "length_fit": "long",
       "nail_bed_fit": [
         "standard",
         "slender"
@@ -1242,7 +1246,7 @@
       "value": "deep",
       "saturation": "mid",
       "style": "solid",
-      "length_fit": "mid",
+      "length_fit": "long",
       "nail_bed_fit": [
         "standard",
         "slender"
