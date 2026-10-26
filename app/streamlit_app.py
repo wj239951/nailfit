@@ -389,6 +389,10 @@ def render_card(index: int, view: dict) -> None:
             st.image(str(view["image"]))
         else:
             st.info("这张推荐暂无可展示的款式图（占位数据）。")
+        if view.get("media_caption"):
+            st.caption(view["media_caption"])
+        if view.get("media_source_url"):
+            st.caption(f"[查看图片来源]({view['media_source_url']})")
 
         st.markdown(f"**{index}. {view['name']}**")
         st.caption(f"{view['tier_text']} · 匹配度 {view['score_percent']}%")

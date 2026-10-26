@@ -12,6 +12,7 @@ from pathlib import Path
 from .data import load_styles, load_taxonomy
 from .features import FeatureError, HandFeatures
 from .labels import summarize
+from .media import media_caption
 from .pipeline import recommend
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -95,12 +96,22 @@ def build_features(selection: dict[str, str]) -> HandFeatures:
 
 
 def card_view(card: dict) -> dict:
-    """把 pipeline 的单张卡片转成前端展示用的结构。"""
+    """把 pipeline 的单张卡片转成前端展示用的结构。
+
+    图片走 media 层：优先参考图（缓存/本地），没有时退回 card["image"]，
+    再没有就是占位。media_caption 是必须展示的来源/授权标注。
+    """
     score = float(card.get("match_score") or 0.0)
+    media = card.get("media") or {}
+    image = media.get("image") or card.get("image")
     return {
         "style_id": card.get("style_id"),
         "name": card.get("name") or card.get("style_id"),
-        "image": image_file(card.get("image")),
+        "image": image_file(image),
+        "media": dict(media),
+        "media_caption": media_caption(media),
+        "media_source_url": media.get("source_url"),
+        "media_provider": media.get("provider"),
         "tier": card.get("tier"),
         "tier_text": tier_label(card.get("tier")),
         "score_percent": int(round(max(0.0, min(1.0, score)) * 100)),

@@ -38,6 +38,10 @@ class StyleCard(BaseModel):
     matched_reasons: list[str] = Field(default_factory=list, description="命中规则的可读原因")
     reason: str = ""
     caution: str | None = None
+    media: dict[str, Any] | None = Field(
+        default=None,
+        description="参考图与来源（image/source_url/license/provider/relevance），失败时为占位",
+    )
 
 
 class RecommendResponse(BaseModel):

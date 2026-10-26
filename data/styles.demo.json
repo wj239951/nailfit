@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "note": "演示款式库：scripts/autotag.py 从 static/demo 自动生成，仅供工程演示；正式库请替换为自拍/可商用图片并人工复核标签。",
   "styles": [
     {
@@ -31,7 +31,20 @@
         "显白",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 法式椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合通勤、婚礼、约会场景。 关键词：显白、通勤。",
+      "search_query": "裸粉奶茶 法式 椭圆甲 方圆形甲 中长甲 通勤 婚礼 显白 美甲",
+      "media": {
+        "image": "static/demo/demo01_nude_french.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d002",
@@ -62,7 +75,20 @@
         "通勤",
         "甜美"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 手绘椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合通勤、约会场景。 关键词：显白、通勤、甜美。",
+      "search_query": "裸粉奶茶 手绘 椭圆甲 方圆形甲 中长甲 通勤 约会 显白 美甲",
+      "media": {
+        "image": "static/demo/demo02_nude_polka_bow.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d003",
@@ -92,7 +118,20 @@
         "显白",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 纯色椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合通勤、约会场景。 关键词：显白、通勤。",
+      "search_query": "裸粉奶茶 纯色 椭圆甲 方圆形甲 中长甲 通勤 约会 显白 美甲",
+      "media": {
+        "image": "static/demo/demo03_sheer_nude.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d004",
@@ -121,7 +160,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "橄榄绿 · 纯色短方：适配方甲、方圆形甲、圆甲；短甲可做；适合通勤、Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 纯色 方甲 方圆形甲 短甲 通勤 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo04_olive_green.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d005",
@@ -149,7 +201,20 @@
       "tags": [
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "暖棕 · 闪粉椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合节日场景。 关键词：梦幻。",
+      "search_query": "橘棕 亮片 椭圆甲 方圆形甲 长甲 节日 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo05_sheer_star.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d006",
@@ -180,7 +245,20 @@
         "温柔",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 渐变椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合通勤、约会场景。 关键词：显白、温柔、通勤。",
+      "search_query": "裸粉奶茶 渐变 椭圆甲 方圆形甲 中长甲 通勤 约会 显白 温柔 美甲",
+      "media": {
+        "image": "static/demo/demo06_pink_gradient.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d007",
@@ -211,7 +289,20 @@
         "酷感",
         "显贵"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "暖棕 · 猫眼椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合通勤、酷感场景。 关键词：通勤、酷感、显贵。",
+      "search_query": "橘棕 猫眼 椭圆甲 方圆形甲 长甲 通勤 酷感 美甲",
+      "media": {
+        "image": "static/demo/demo07_brown_cateye.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d008",
@@ -242,7 +333,20 @@
         "显白",
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "暖黄 · 渐变手绘：适配圆甲、椭圆甲、方圆形甲；短甲可做；适合通勤、约会场景。 关键词：显白、清新。",
+      "search_query": "橘棕 渐变 圆甲 椭圆甲 短甲 通勤 约会 显白 清新 美甲",
+      "media": {
+        "image": "static/demo/demo08_yellow_daisy.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d009",
@@ -270,7 +374,20 @@
       "tags": [
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "闪片 · 闪粉短甲：适配圆甲、方圆形甲；短甲可做；适合节日场景。 关键词：梦幻。",
+      "search_query": "亮片 圆甲 方圆形甲 短甲 节日 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo09_glitter_cartoon.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d010",
@@ -302,7 +419,20 @@
         "温柔",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 法式椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合通勤、婚礼、约会场景。 关键词：显白、温柔、通勤。",
+      "search_query": "裸粉奶茶 法式 椭圆甲 方圆形甲 中长甲 通勤 婚礼 显白 温柔 美甲",
+      "media": {
+        "image": "static/demo/demo10_nude_french_dots.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d011",
@@ -331,7 +461,20 @@
         "清新",
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 闪粉长杏仁：适配杏仁甲、椭圆甲；长甲可做；适合节日、Y2K场景。 关键词：清新、梦幻。",
+      "search_query": "蓝绿 亮片 杏仁甲 椭圆甲 长甲 节日 Y2K 清新 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo11_blue_almond_stars.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d012",
@@ -359,7 +502,20 @@
       "tags": [
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "闪片 · 闪粉椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合节日场景。 关键词：梦幻。",
+      "search_query": "亮片 椭圆甲 方圆形甲 长甲 节日 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo12_sheer_glitter_heart.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d013",
@@ -389,7 +545,20 @@
         "清新",
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 闪粉椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合节日、Y2K场景。 关键词：清新、梦幻。",
+      "search_query": "蓝绿 亮片 椭圆甲 方圆形甲 长甲 节日 Y2K 清新 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo13_blue_star_satin.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d014",
@@ -417,7 +586,20 @@
       "tags": [
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "闪片 · 闪粉椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合节日场景。 关键词：梦幻。",
+      "search_query": "亮片 椭圆甲 方圆形甲 长甲 节日 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo14_glitter_lines_nude.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d015",
@@ -448,7 +630,20 @@
         "温柔",
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 闪粉椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合约会、节日场景。 关键词：显白、温柔、梦幻。",
+      "search_query": "裸粉奶茶 亮片 椭圆甲 方圆形甲 长甲 约会 节日 显白 温柔 美甲",
+      "media": {
+        "image": "static/demo/demo15_bow_star_nude.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d016",
@@ -476,7 +671,20 @@
       "tags": [
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "银白 · 格纹闪片：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合节日场景。 关键词：梦幻。",
+      "search_query": "亮片 棋盘格 椭圆甲 方圆形甲 长甲 节日 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo16_glitter_checker.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d017",
@@ -507,7 +715,20 @@
         "温柔",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 手绘椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合通勤、约会场景。 关键词：显白、温柔、通勤。",
+      "search_query": "裸粉奶茶 手绘 椭圆甲 方圆形甲 中长甲 通勤 约会 显白 温柔 美甲",
+      "media": {
+        "image": "static/demo/demo17_flower_stone_nude.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d018",
@@ -535,7 +756,20 @@
       "tags": [
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "闪片 · 闪粉椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合节日场景。 关键词：梦幻。",
+      "search_query": "亮片 椭圆甲 方圆形甲 长甲 节日 梦幻 美甲",
+      "media": {
+        "image": "static/demo/demo18_glitter_ombre_nude.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d019",
@@ -563,7 +797,20 @@
       "tags": [
         "甜美"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "黑白 · 手绘椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合约会场景。 关键词：甜美。",
+      "search_query": "黑白灰 手绘 椭圆甲 方圆形甲 长甲 约会 甜美 美甲",
+      "media": {
+        "image": "static/demo/demo19_white_lace_long.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d020",
@@ -592,7 +839,20 @@
       "tags": [
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 法式长甲：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合通勤、婚礼场景。 关键词：通勤。",
+      "search_query": "裸粉奶茶 法式 椭圆甲 方圆形甲 长甲 通勤 婚礼 美甲",
+      "media": {
+        "image": "static/demo/demo20_french_bow_long.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d021",
@@ -622,7 +882,20 @@
         "通勤",
         "甜美"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "暖棕 · 手绘椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合通勤、约会场景。 关键词：通勤、甜美。",
+      "search_query": "橘棕 手绘 椭圆甲 方圆形甲 中长甲 通勤 约会 甜美 美甲",
+      "media": {
+        "image": "static/demo/demo21_brown_velvet_floral.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d022",
@@ -651,7 +924,20 @@
         "显白",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸杏 · 纯色椭圆：适配椭圆甲、杏仁甲；中长甲可做；适合通勤、约会场景。 关键词：显白、通勤。",
+      "search_query": "裸粉奶茶 纯色 椭圆甲 杏仁甲 中长甲 通勤 约会 显白 美甲",
+      "media": {
+        "image": "static/demo/demo22_nude_beige_oval.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d023",
@@ -680,7 +966,20 @@
       "tags": [
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "暖棕 · 混搭椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合通勤、Y2K场景。 关键词：通勤。",
+      "search_query": "橘棕 混搭 椭圆甲 方圆形甲 长甲 通勤 Y2K 美甲",
+      "media": {
+        "image": "static/demo/demo23_brown_cream_two_tone.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d024",
@@ -710,7 +1009,20 @@
         "温柔",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 纯色椭圆：适配椭圆甲、杏仁甲；中长甲可做；适合通勤、约会场景。 关键词：显白、温柔、通勤。",
+      "search_query": "裸粉奶茶 纯色 椭圆甲 杏仁甲 中长甲 通勤 约会 显白 温柔 美甲",
+      "media": {
+        "image": "static/demo/demo24_pink_sheer_squoval.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d025",
@@ -738,7 +1050,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "粉蓝 · 渐变椭圆：适配椭圆甲、方圆形甲、杏仁甲；中长甲可做；适合Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 渐变 椭圆甲 方圆形甲 中长甲 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo25_pastel_pink_blue.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d026",
@@ -766,7 +1091,20 @@
       "tags": [
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "暖棕 · 纯色短方：适配方甲、方圆形甲；短甲可做；适合通勤场景。 关键词：通勤。",
+      "search_query": "橘棕 纯色 方甲 方圆形甲 短甲 通勤 美甲",
+      "media": {
+        "image": "static/demo/demo26_cream_taupe_square.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d027",
@@ -794,7 +1132,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 纯色短方：适配方甲、方圆形甲；短甲可做；适合Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 纯色 方甲 方圆形甲 短甲 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo27_sage_olive_square.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d028",
@@ -822,7 +1173,20 @@
       "tags": [
         "显白"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "正红 · 纯色短方：适配方甲、方圆形甲；短甲可做；适合节日场景。 关键词：显白。",
+      "search_query": "正红 纯色 方甲 方圆形甲 短甲 节日 显白 美甲",
+      "media": {
+        "image": "static/demo/demo28_dark_red_cream_square.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d029",
@@ -852,7 +1216,20 @@
         "清新",
         "甜美"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 手绘椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合约会、Y2K场景。 关键词：清新、甜美。",
+      "search_query": "蓝绿 手绘 椭圆甲 方圆形甲 长甲 约会 Y2K 清新 甜美 美甲",
+      "media": {
+        "image": "static/demo/demo29_blue_doodle_long.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d030",
@@ -880,7 +1257,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 混搭椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 混搭 椭圆甲 方圆形甲 长甲 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo30_blue_white_cool.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d031",
@@ -908,7 +1298,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 纯色椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 纯色 椭圆甲 方圆形甲 长甲 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo31_dusty_blue_long.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d032",
@@ -938,7 +1341,20 @@
         "气质",
         "酷感"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "浆果紫 · 猫眼短方：适配方甲、方圆形甲；短甲可做；适合约会、酷感场景。 关键词：气质、酷感。",
+      "search_query": "浆果紫 猫眼 方甲 方圆形甲 短甲 约会 酷感 气质 美甲",
+      "media": {
+        "image": "static/demo/demo32_mauve_cateye_square.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d033",
@@ -970,7 +1386,20 @@
         "温柔",
         "通勤"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "裸粉 · 法式短圆：适配圆甲、椭圆甲；短甲可做；适合通勤、婚礼、约会场景。 关键词：显白、温柔、通勤。",
+      "search_query": "裸粉奶茶 法式 圆甲 椭圆甲 短甲 通勤 婚礼 显白 温柔 美甲",
+      "media": {
+        "image": "static/demo/demo33_nude_french_round.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d034",
@@ -1002,7 +1431,20 @@
         "酷感",
         "梦幻"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "浆果紫 · 闪粉椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合约会、节日、酷感场景。 关键词：气质、酷感、梦幻。",
+      "search_query": "浆果紫 亮片 椭圆甲 方圆形甲 长甲 约会 节日 气质 酷感 美甲",
+      "media": {
+        "image": "static/demo/demo34_mauve_star_glitter.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d035",
@@ -1031,7 +1473,20 @@
         "清新",
         "酷感"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 猫眼长杏仁：适配杏仁甲、椭圆甲；长甲可做；适合酷感、Y2K场景。 关键词：清新、酷感。",
+      "search_query": "蓝绿 猫眼 杏仁甲 椭圆甲 长甲 酷感 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo35_navy_cateye_almond.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d036",
@@ -1059,7 +1514,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 金属椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 镜面 椭圆甲 方圆形甲 长甲 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo36_light_blue_metal.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d037",
@@ -1088,7 +1556,20 @@
         "气质",
         "酷感"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "浆果紫 · 猫眼长杏仁：适配杏仁甲、椭圆甲；长甲可做；适合约会、酷感场景。 关键词：气质、酷感。",
+      "search_query": "浆果紫 猫眼 杏仁甲 椭圆甲 长甲 约会 酷感 气质 美甲",
+      "media": {
+        "image": "static/demo/demo37_plum_cateye_almond.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d038",
@@ -1117,7 +1598,20 @@
         "气质",
         "酷感"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "浆果紫 · 猫眼长杏仁：适配杏仁甲、椭圆甲；长甲可做；适合约会、酷感场景。 关键词：气质、酷感。",
+      "search_query": "浆果紫 猫眼 杏仁甲 椭圆甲 长甲 约会 酷感 气质 美甲",
+      "media": {
+        "image": "static/demo/demo38_berry_cateye_almond.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d039",
@@ -1144,7 +1638,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 猫眼长杏仁：适配杏仁甲、椭圆甲；长甲可做；适合Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 猫眼 杏仁甲 椭圆甲 长甲 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo39_olive_cateye_almond.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d040",
@@ -1174,7 +1681,20 @@
         "气质",
         "酷感"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "浆果紫 · 猫眼椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合约会、酷感场景。 关键词：气质、酷感。",
+      "search_query": "浆果紫 猫眼 椭圆甲 方圆形甲 长甲 约会 酷感 气质 美甲",
+      "media": {
+        "image": "static/demo/demo40_greige_lilac_cateye.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d041",
@@ -1203,7 +1723,20 @@
         "气质",
         "酷感"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "浆果紫 · 纯色长杏仁：适配杏仁甲、椭圆甲；长甲可做；适合约会、酷感场景。 关键词：气质、酷感。",
+      "search_query": "浆果紫 纯色 杏仁甲 椭圆甲 长甲 约会 酷感 气质 美甲",
+      "media": {
+        "image": "static/demo/demo41_lilac_cream_almond.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d042",
@@ -1231,7 +1764,20 @@
       "tags": [
         "清新"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "蓝绿 · 金属椭圆：适配椭圆甲、方圆形甲、杏仁甲；长甲可做；适合Y2K场景。 关键词：清新。",
+      "search_query": "蓝绿 镜面 椭圆甲 方圆形甲 长甲 Y2K 清新 美甲",
+      "media": {
+        "image": "static/demo/demo42_gold_green_metallic.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     },
     {
       "id": "d043",
@@ -1258,7 +1804,21 @@
       "tags": [
         "显白"
       ],
-      "autotag": true
+      "autotag": true,
+      "brand": "演示素材",
+      "description": "正红 · 纯色长杏仁：适配杏仁甲、椭圆甲；长甲可做；适合节日场景。 关键词：显白。",
+      "search_query": "正红 纯色 杏仁甲 椭圆甲 长甲 节日 显白 美甲",
+      "media": {
+        "image": "static/demo/demo43_red_gloss_almond.jpg",
+        "source_url": null,
+        "license": "demo",
+        "provider": "local",
+        "relevance": 5,
+        "fetched_at": "2026-10-26",
+        "verified": true,
+        "note": "演示截图素材，仅工程演示，非本手模拟效果"
+      }
     }
-  ]
+  ],
+  "schema_note": "schema v2：本地库存结构化文本描述（brand/description/search_query），图片由 core/media.py 在展示层解析，失败降级为纯文字卡。"
 }

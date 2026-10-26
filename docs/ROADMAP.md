@@ -1,7 +1,7 @@
 # NailFit 剩余任务清单（Roadmap）
 
 > 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `10f640e`（M5 说明 + M6 工具 + 43 张演示图 + M7 演示库）→ `88e2126`（M14 Streamlit 前端）→ `b3a881c`（M8 视觉层 + M9 接进主流程）→ `f610669`（自然拍摄角度适配）→ `175f96b`（M12 校准）→ `653c2dc`（M17 解释层）→ `48badc4`（M17 云端实测文档）→ `379461b`（M18 评测脚本 + 修复 3 条缺口）→ **本次改动：M19 评测集（25 条用例 = 8 手工 + 17 手照，`--vision` 视觉层指标，修 selector 放宽步骤选重色系的契约 bug）**
-> 已完成：项目骨架、规则引擎（18 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**；**M14 Streamlit 单页（`app/streamlit_app.py`）完成**；**M8 视觉层 + M9 主流程接入完成**（`core/vision.py`、`scripts/vision_demo.py`、`/api/vision/extract`、`/api/recommend/from-image`、前端「手照识别」）；**M12 第一版校准完成**（6 张标准手照，依据见 README「M12 第一版校准」）；**M17 解释层完成**（LLM 理由 + 模板降级 + 云端 3/3 实测）；**M18 评测脚本完成**（契约/合理性/多样性/稳定性/抖动）；**M19 评测集完成**（25 条用例 + 视觉层指标，测试 162 个）
+> 已完成：项目骨架、规则引擎（18 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**；**M14 Streamlit 单页（`app/streamlit_app.py`）完成**；**M8 视觉层 + M9 主流程接入完成**（`core/vision.py`、`scripts/vision_demo.py`、`/api/vision/extract`、`/api/recommend/from-image`、前端「手照识别」）；**M12 第一版校准完成**（6 张标准手照，依据见 README「M12 第一版校准」）；**M17 解释层完成**（LLM 理由 + 模板降级 + 云端 3/3 实测）；**M18 评测脚本完成**（契约/合理性/多样性/稳定性/抖动）；**M19 评测集完成**（25 条用例 + 视觉层指标，测试 162 个）；**M24 参考图媒体层完成**（schema v2 + 预取/校验脚本，测试 198 个）；**M25 趋势/参考来源文本完成**（`scripts/web_sources.py`：真实 Key 实测 Search 可用、Fetch 无图，图片仍走本地图库 / Pexels）
 > 原则：**规则决定推荐什么，模型只决定怎么说；不生成图片，只从款式库挑图。**
 
 ---
@@ -62,6 +62,8 @@
 | M21 | 2–3 分钟演示视频 | 视频 | 从手照到三卡的完整流程 |
 | M22 | 面试讲解稿 | `docs/pitch.md` | 3 分钟版：问题 → 方案 → 取舍 → 结果 |
 | M23 | 简历条目（STAR） | 简历 | 一句话说清技术点与量化结果 |
+| M24 | 参考图媒体层：款式 → 授权参考图 + 来源 | `core/media.py`、`scripts/migrate_styles_v2.py` / `prefetch_media.py` / `validate_media.py` | 演示库 43/43 有图；推荐请求不联网；无图降级为纯文字；每张图带 license + source_url；测试 198 个 | ✅ 已完成（schema v2 + 本地 Provider 已跑通；Pexels 需 API Key；DeepSeek Search 实测 Fetch 无图，已移出默认图片链） |
+| M25 | 趋势/参考来源文本：DeepSeek Search → 链接与摘要 | `scripts/web_sources.py`、`core/media.py` 的 `search_sources()` | 输出 title / url / site / date / summary；不下载图片；缺 Key 时报错清晰；测试 +3 | ✅ 已完成（2026-10-26 真实 Key 实测：Search 可用、Fetch 只返回纯文本） |
 
 ---
 
@@ -92,3 +94,5 @@ M20/M21 依赖 M1 或 M14（要有可演示入口）
 - 规则可视化配置页
 - 多场景话术模板（通勤 / 约会 / 婚礼 / 节日各一套）
 - 公网部署（Render / Railway），注意当前接口无鉴权
+- 参考图联网预取：`scripts/prefetch_media.py --provider pexels|search`（需 `PEXELS_API_KEY` / `DEEPSEEK_API_KEY`），缓存进 `data/media_cache.json` 后可随项目分发
+- 媒体层二期：把 `data/media_cache.json` 中 `unknown` 授权的图逐张人工确认，替换成 Pexels / 自摄来源

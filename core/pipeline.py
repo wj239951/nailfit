@@ -18,6 +18,7 @@ from .data import load_styles, load_taxonomy
 from .errors import EmptyStyleLibraryError, NoCandidateError, VisionUnusableError
 from .explainer import explain
 from .features import HandFeatures, FeatureError
+from .media import empty_media, resolve_card_media
 from .retriever import SemanticScorer
 from .rules import RuleEngine, normalize
 from .selector import Scored, pick_three, rank
@@ -131,6 +132,13 @@ def recommend(
         )
 
     validate_cards(cards, {s["id"] for s in styles}, taxonomy)
+
+    # 展示层：给每张卡挂参考图（只读缓存/本地图，不联网；失败退化成纯文字卡）
+    media_map = resolve_card_media(
+        {s["id"]: s for s in styles}, [c["style_id"] for c in cards]
+    )
+    for card in cards:
+        card["media"] = media_map.get(card["style_id"]) or empty_media()
 
     return {
         "features": features.to_dict(),

@@ -46,7 +46,8 @@ nailfit/
 │   ├── taxonomy.yaml        # 特征枚举 + 打分权重 + 多样性约束
 │   ├── rules.yaml           # 匹配规则（改规则不改代码）
 │   ├── styles.sample.json   # 款式库样例（15 条，替换成真实款式）
-│   └── styles.demo.json     # 演示款式库（43 条，autotag 自动生成，仅演示）
+│   ├── styles.demo.json     # 演示款式库（43 条，autotag 自动生成，仅演示，schema v2）
+│   └── media_cache.json     # 参考图缓存（prefetch 生成；缺失时卡片退化为纯文字）
 ├── core/
 │   ├── data.py              # YAML / JSON 加载（文件缺失/损坏时报清晰错误）
 │   ├── errors.py            # 统一异常：数据缺失 / 候选不足 / 契约失败
@@ -57,6 +58,7 @@ nailfit/
 │   ├── selector.py          # 排序 + 三档 + 多样性
 │   ├── styles.py            # 款式库校验（字段 / 枚举 / 唯一性 / 图片）
 │   ├── labels.py            # 中文标签（特征名 / 甲型 / 场景）
+│   ├── media.py             # 参考图解析：缓存 → 本地图 → 网络 Provider → 占位（M24）
 │   ├── retriever.py         # 可选语义加权（bge-m3）
 │   ├── explainer.py         # LLM 生成理由（无 key 时模板降级）
 │   ├── validator.py         # 输出契约校验
@@ -74,8 +76,12 @@ nailfit/
 │   ├── prepare_images.py    # 款式图批量裁切 / 缩放 / 压缩（≤300KB）
 │   ├── vision_demo.py       # 手照 → 手部特征（M8，需 mediapipe）
 │   ├── autotag.py           # 图片 → 结构化款式标签，生成演示款式库
-│   └── check_llm.py         # 解释层自检（M17：云端 Key / 本地 Ollama 联调）
-├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层 / 评测
+│   ├── check_llm.py         # 解释层自检（M17：云端 Key / 本地 Ollama 联调）
+│   ├── migrate_styles_v2.py # 款式库升级 schema v2：brand / description / search_query / media
+│   ├── prefetch_media.py    # 预取参考图写缓存（local / Pexels；DeepSeek Search 实测无图）
+│   ├── web_sources.py       # DeepSeek Search → 趋势 / 参考来源文本（不下载图片）
+│   └── validate_media.py    # schema v2 媒体字段校验（授权 / 来源 / 图片存在）
+├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层 / 评测 / 媒体层
 ├── eval/
 │   ├── run.py               # 推荐质量评测（M18 五维 + M19 手照视觉层）
 │   ├── cases.json           # 评测用例（8 条手工特征 + 17 条手照，共 25 条）
@@ -88,7 +94,7 @@ nailfit/
 └── docs/
     ├── design.md            # 设计说明
     ├── IMAGE_GUIDE.md       # 图片来源、选图标准与入库流程
-    └── ROADMAP.md           # 剩余任务清单（M1–M23）
+    └── ROADMAP.md           # 剩余任务清单（M1–M24）
 ```
 
 ## 快速开始
@@ -286,6 +292,31 @@ python scripts/validate_styles.py --check-images
 python scripts/validate_styles.py --styles data/styles.json
 ```
 
+### 参考图媒体层（M24）
+
+推荐结果要展示「款式参考图 + 来源」，但推荐请求**不联网**：联网找图只在预取脚本里发生，抓到的图写进缓存，展示层只读缓存 / 本地图，毫秒级且可复现。
+
+```bash
+# 1) 款式库升级到 schema v2（brand / description / search_query / media，幂等，可重复跑）
+python scripts/migrate_styles_v2.py --styles data/styles.demo.json
+
+# 2) 预取参考图：先把图放进 static/ 用 local；有 Key 再开网络 Provider
+python scripts/prefetch_media.py --check                     # 只查覆盖率，不联网
+python scripts/prefetch_media.py --provider local            # 本地图写进 data/media_cache.json
+python scripts/prefetch_media.py --provider pexels --limit 10   # 需 PEXELS_API_KEY（可商用图库）
+python scripts/prefetch_media.py --provider search --limit 10   # 实验性：需 DEEPSEEK_API_KEY
+
+# 3) 校验 schema v2 + 授权标注 + 图片存在
+python scripts/validate_media.py --check-images
+
+# 4) 可选：用 DeepSeek Search 拉趋势 / 参考来源文本（不下载图片）
+python scripts/web_sources.py --query "2026 美甲流行趋势" --count 3
+```
+
+**网络抓图实测结论（2026-10-26，真实 DeepSeek Key）**：Search 接口正常返回（`title` / `url` / `site_name` / `date` / `summary` / `authority` / `rerank_score`），但 **Fetch 返回的 Markdown 只有正文、不含图片**（8 个页面 0 命中，含 Wikipedia/WikiHow 这类图多的站点），部分站点还会 404 或 ReadTimeout。因此网络图片改由 Pexels / Unsplash（需各自 Key；本机实测 API 可达）或本地图库承担；DeepSeek Search 只用于「当前流行什么 / 出处在哪里」的文本证据（`scripts/web_sources.py`）。
+
+解析顺序是 `data/media_cache.json`（未过期）→ `static/` 本地图 → 网络 Provider（仅 prefetch）→ 占位。没图的款式不会阻塞推荐：卡片退化为纯文字，前端显示「暂无参考图 · 仅展示文字推荐」。每张图都带 `license` / `source_url`，前端统一标注「仅风格参考，非本手模拟效果」。
+
 ### 自动打标签（M7）
 
 M7 要的是“图片 → 结构化标签”。正式库人工复核前，先用 `scripts/autotag.py` 从演示图生成一份可跑的演示库：
@@ -431,6 +462,21 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 | `tags` | 自由标签（显白/通勤/温柔…） |
 
 `data/styles.demo.json` 是同一 schema 的 43 条演示库（`autotag` 生成，额外带 `autotag: true` 与 `name`，图片指向 `static/demo/`），只用于工程演示；正式库仍为 `data/styles.json`。
+
+### schema v2（M24，参考图媒体层）
+
+`styles.demo.json` 已升级为 `version: 2`，每条在原有字段外追加：
+
+| 字段 | 说明 |
+|---|---|
+| `brand` | 来源/品牌占位（演示库为「演示素材」） |
+| `description` | 款式的中文描述（展示与检索用） |
+| `search_query` | 联网找参考图时用的查询词（中文短句） |
+| `media` | `{image, source_url, license, provider, relevance, fetched_at, verified, note}` |
+
+`media.license` 取值：`demo`（本地演示图）/ `self`（自摄或自有授权）/ `pexels` / `unsplash`（可商用图库）/ `unknown`（公开网页，商用前必须确认授权）/ `placeholder`（无图）。非本地授权必须带 `source_url`。
+
+媒体缓存 `data/media_cache.json` 结构：`{version, updated_at, items: {style_id: media}}`，由 `prefetch_media.py` 生成，可随项目分发以复现演示效果。
 
 ## 评测（M18 / M19 已完成）
 
