@@ -126,7 +126,7 @@ def test_unknown_feature_field() -> None:
 
 
 def test_api_empty_library_returns_503(monkeypatch) -> None:
-    monkeypatch.setattr("core.pipeline.load_styles", lambda: [])
+    monkeypatch.setattr("api.routes.load_styles", lambda *args, **kwargs: [])
     resp = client.post(
         "/api/recommend",
         json={"features": HandFeatures().to_dict(), "use_llm": False},
@@ -136,7 +136,7 @@ def test_api_empty_library_returns_503(monkeypatch) -> None:
 
 
 def test_api_too_few_candidates_returns_422(monkeypatch) -> None:
-    monkeypatch.setattr("core.pipeline.load_styles", lambda: [SHORT_STYLE])
+    monkeypatch.setattr("api.routes.load_styles", lambda *args, **kwargs: [SHORT_STYLE])
     resp = client.post(
         "/api/recommend",
         json={"features": HandFeatures().to_dict(), "use_llm": False},

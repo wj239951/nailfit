@@ -22,6 +22,11 @@ class RecommendRequest(BaseModel):
     )
     free_text: str | None = Field(default=None, description="用户自由描述，如「想要温柔显白」")
     use_llm: bool = Field(default=True, description="是否有 DEEPSEEK_API_KEY 时调用云端生成理由")
+    library: str = Field(
+        default="sample",
+        description="款式库：sample（15 款样例）/ demo（43 款演示库）",
+        examples=["sample", "demo"],
+    )
 
 
 class StyleCard(BaseModel):

@@ -99,7 +99,7 @@ nailfit/
 └── docs/
     ├── design.md            # 设计说明
     ├── IMAGE_GUIDE.md       # 图片来源、选图标准与入库流程
-    └── ROADMAP.md           # 剩余任务清单（M1–M27）
+    └── ROADMAP.md           # 剩余任务清单（M1–M28）
 ```
 
 ## 快速开始
@@ -289,6 +289,21 @@ streamlit run app/streamlit_app.py         # 默认 http://localhost:8501
 
 前端只负责布局，特征校验、推荐编排、视图整理分别复用 `core.features` / `core.pipeline` / `core.ui_view`，手照识别复用 `core.vision`，和 CLI、FastAPI 行为一致。`tests/test_frontend.py` 用 Streamlit 官方 `AppTest` 做冒烟测试，没装 streamlit 时自动跳过。
 
+### Vue 3 前端（M28，独立目录）
+
+Streamlit 版偏演示/调试；面试或对外展示用独立的 Vue 前端，放在仓库外的 `naifit-fonted/`（Vue 3 + Vite + TypeScript，无 UI 框架依赖）：
+
+```bash
+cd ../naifit-fonted
+npm install        # 或 pnpm install
+npm run dev        # http://127.0.0.1:5173，/api、/static 自动代理到后端 8000
+npm run build      # 产物在 dist/
+```
+
+- 页面：推荐工作台（7 项特征 + 快捷预设 + 款式库切换 + 手照上传识别 + 三档结果卡 + 完整 JSON 下载）、款式库页（43/15 款全量浏览 + 色系/款式筛选）
+- 图片走同源 `/static/...`（后端已挂载 `StaticFiles`），不再依赖 Streamlit 的静态文件服务
+- 后端为此新增 `POST /api/vision/upload`（直接上传图片字节，临时目录识别后清理）、`GET /api/styles?library=sample|demo`、`POST /api/recommend` 的 `library` 字段；接口响应与 Streamlit 版一致
+
 ## 款式库校验
 
 给 `data/styles.json` 打标前/后都跑一遍，避免脏数据进推荐链路：
@@ -426,14 +441,20 @@ python scripts/vision_demo.py --dir raw_hands --json out_hands.json
     "scene": "commute"
   },
   "free_text": "想要温柔一点、显白",
-  "use_llm": true
+  "use_llm": true,
+  "library": "sample"
 }
 ```
 
-返回三张推荐卡（含 `matched_rules` 与 `reason`）、以及 `avoid` 避雷提示。
+返回三张推荐卡（含 `matched_rules` 与 `reason`）、以及 `avoid` 避雷提示。`library` 可选 `sample`（默认，15 款样例/占位图）或 `demo`（43 款演示库/真实截图），未知库名返回 `422`。
 
 ### `GET /api/styles`
-款式库列表（用于前端展示与调试）。库为空或数据损坏时返回 `503`。
+款式库列表（用于前端展示与调试）。库为空或数据损坏时返回 `503`；`library` 查询参数可选 `sample`（默认）/ `demo`，未知库名返回 `422`。
+
+```bash
+curl 'http://127.0.0.1:8000/api/styles?library=demo'   # 43 款演示库
+curl 'http://127.0.0.1:8000/api/styles'                # 15 款样例库（默认）
+```
 
 ### `POST /api/vision/extract`（M8/M9）
 
@@ -456,6 +477,18 @@ python scripts/vision_demo.py --dir raw_hands --json out_hands.json
 
 > 说明：当前 `image_path` 是本地路径，只适合本机演示；公网部署时应改成上传接口并加鉴权。
 
+### `POST /api/vision/upload`（M28）
+
+给浏览器前端用的直传接口：请求体直接是图片字节（`Content-Type: image/jpeg` 等），查询参数 `scene` / `auto_download`，后端落临时文件识别后即删。返回结构与 `/api/vision/extract` 相同（容器里无 `raw_hands/` 也能用）。
+
+```bash
+curl -X POST --data-binary @hand.jpg \
+  -H 'Content-Type: image/jpeg' \
+  'http://127.0.0.1:8000/api/vision/upload?scene=commute'
+```
+
+空请求体返回 `422`，超过 12 MB 返回 `413`，识别失败返回 `422`。
+
 ## 错误处理
 
 所有失败路径都返回**一行能看懂的中文原因**，不用翻 traceback：
@@ -465,6 +498,7 @@ python scripts/vision_demo.py --dir raw_hands --json out_hands.json
 | 特征值非法（如 `length=eternal`） | `特征非法：...`，退出码 1 | `422`，`detail` 说明哪个字段不合法 |
 | 款式库文件缺失 / JSON 损坏 | `✗ 推荐失败：...`，退出码 2 | `503`，`款式库不可用: ...` |
 | 款式库为空（`styles: []`） | 同上 | `503`，`款式库不可用: ...` |
+| 款式库名未知（如 `library=nope`） | — | `422`，`detail` 列出可选库名 |
 | 规则过滤后无候选 | `✗ 推荐失败：没有通过硬性过滤的款式...` | `422`，`无法生成推荐: ...` |
 | 过滤后不足 3 款（凑不齐三档） | 同上 | `422`，`过滤后只剩 N 款，至少需要 3 款` |
 | 手照没检测到手 / 模型缺失 | `✗ ...`，退出码 2 | `422`，`手照识别失败: ...` |

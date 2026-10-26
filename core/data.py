@@ -18,6 +18,23 @@ from .errors import DataFormatError, EmptyStyleLibraryError
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 
+# 可选款式库：sample = 15 款样例（随仓库提交占位图），demo = 43 款演示库
+LIBRARIES: dict[str, Path] = {
+    "sample": DATA_DIR / "styles.sample.json",
+    "demo": DATA_DIR / "styles.demo.json",
+}
+DEFAULT_LIBRARY = "sample"
+
+
+def library_path(name: str) -> Path:
+    """款式库名字 → 文件路径；未知名字抛 ValueError（接口层映射 422）。"""
+    try:
+        return LIBRARIES[name]
+    except KeyError:
+        raise ValueError(
+            f"未知款式库：{name}（可选：{', '.join(sorted(LIBRARIES))}）"
+        ) from None
+
 
 def _resolve(path: str | Path) -> Path:
     """相对路径按项目根目录解析，保证从任意工作目录调用都能找到数据。
