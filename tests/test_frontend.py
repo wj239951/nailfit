@@ -54,5 +54,15 @@ def test_vision_mode_renders_controls() -> None:
     assert any(t.label.startswith("自由描述") for t in at.text_input)
 
 
+def test_landing_shows_style_gallery() -> None:
+    """首页空状态要有款式库图廊（或明确的缺图提示），不能只留一行灰字。"""
+    at = _app()
+    at.run()
+    assert not at.exception
+    assert any(block.value == "先看看款式库" for block in at.subheader)
+    captions = "\n".join(str(block.value) for block in at.caption)
+    assert "这里先展示" in captions or "没有可展示的图片" in captions
+
+
 if __name__ == "__main__":  # pragma: no cover
     sys.exit(pytest.main([__file__, "-v"]))

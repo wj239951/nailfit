@@ -1,7 +1,7 @@
 # NailFit 剩余任务清单（Roadmap）
 
-> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `10f640e`（M5 说明 + M6 工具 + 43 张演示图 + M7 演示库）→ `88e2126`（M14 Streamlit 前端）→ `b3a881c`（M8 视觉层 + M9 接进主流程）→ `f610669`（自然拍摄角度适配）→ `175f96b`（M12 校准）→ `653c2dc`（M17 解释层）→ `48badc4`（M17 云端实测文档）→ `379461b`（M18 评测脚本 + 修复 3 条缺口）→ **本次改动：M19 评测集（25 条用例 = 8 手工 + 17 手照，`--vision` 视觉层指标，修 selector 放宽步骤选重色系的契约 bug）**
-> 已完成：项目骨架、规则引擎（18 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**；**M14 Streamlit 单页（`app/streamlit_app.py`）完成**；**M8 视觉层 + M9 主流程接入完成**（`core/vision.py`、`scripts/vision_demo.py`、`/api/vision/extract`、`/api/recommend/from-image`、前端「手照识别」）；**M12 第一版校准完成**（6 张标准手照，依据见 README「M12 第一版校准」）；**M17 解释层完成**（LLM 理由 + 模板降级 + 云端 3/3 实测）；**M18 评测脚本完成**（契约/合理性/多样性/稳定性/抖动）；**M19 评测集完成**（25 条用例 + 视觉层指标，测试 162 个）；**M24 参考图媒体层完成**（schema v2 + 预取/校验脚本，测试 198 个）；**M25 趋势/参考来源文本完成**（`scripts/web_sources.py`：真实 Key 实测 Search 可用、Fetch 无图，图片仍走本地图库 / Pexels）
+> 状态基线：`1a2d5d1`（2026-10-23，已含 M1–M4）→ `10f640e`（M5 说明 + M6 工具 + 43 张演示图 + M7 演示库）→ `88e2126`（M14 Streamlit 前端）→ `b3a881c`（M8 视觉层 + M9 接进主流程）→ `f610669`（自然拍摄角度适配）→ `175f96b`（M12 校准）→ `653c2dc`（M17 解释层）→ `48badc4`（M17 云端实测文档）→ `379461b`（M18 评测脚本 + 修复 3 条缺口）→ `ccb96cc`（M24 媒体层 + M25 搜索来源文本）→ **本次改动：M26 Openverse 候选图 + M27 样例库占位图 / 首页图廊（测试 217 个）**
+> 已完成：项目骨架、规则引擎（18 条规则）、三选一、输出契约校验、CLI demo、FastAPI、GitHub Actions CI、MIT License、**M1–M4**；**M5 说明、M6 工具 + 43 张演示图、M7 演示库（43 条，`data/styles.demo.json`）就绪**；**M14 Streamlit 单页（`app/streamlit_app.py`）完成**；**M8 视觉层 + M9 主流程接入完成**（`core/vision.py`、`scripts/vision_demo.py`、`/api/vision/extract`、`/api/recommend/from-image`、前端「手照识别」）；**M12 第一版校准完成**（6 张标准手照，依据见 README「M12 第一版校准」）；**M17 解释层完成**（LLM 理由 + 模板降级 + 云端 3/3 实测）；**M18 评测脚本完成**（契约/合理性/多样性/稳定性/抖动）；**M19 评测集完成**（25 条用例 + 视觉层指标，测试 162 个）；**M24 参考图媒体层完成**（schema v2 + 预取/校验脚本，测试 198 个）；**M25 趋势/参考来源文本完成**（`scripts/web_sources.py`：真实 Key 实测 Search 可用、Fetch 无图，图片仍走本地图库 / Pexels）；**M26 Openverse 候选图完成**（`scripts/openverse_candidates.py` + CC 白名单/尺寸/相关性过滤，只产出候选清单，测试 217 个）；**M27 样例库占位图 + 首页图廊完成**（`scripts/make_sample_images.py` 生成 15 张示意图，Streamlit 首页展示当前库 8 张款式图，卡片图宽自适应）
 > 原则：**规则决定推荐什么，模型只决定怎么说；不生成图片，只从款式库挑图。**
 
 ---
@@ -54,7 +54,7 @@
 | M18 | 评测脚本 | `eval/run.py`、`eval/cases.json` | 批量跑 cases → 合理率/多样性/稳定性 | ✅ 已完成（契约 100%、合理性 100%、多样性 100%、top-1 稳定 100%、单特征抖动 16%；首轮 3 条缺口已修复，`known_gap` 0 条） |
 | M19 | 评测集 | `eval/cases.json` | 真实手照 + 人工期望 | ✅ 已完成（25 条用例 = 8 手工 + 17 手照；新增 `--vision`：检测率 88%、肤色 73%、甲床 100%、甲型 71%、甲长 100%、手型 50%；演示库 43 条：契约 100%、合理性 92%、多样性 12%（autotag 标签噪声）；修掉放宽步骤选同色系的契约 bug；测试 162 个） |
 
-## 阶段六：求职包装（负责人：你为主，~1 天）
+## 阶段六：媒体完善 + 求职包装（负责人：共同，媒体 M24–M27，包装 M20–M23）
 
 | ID | 任务 | 产出 | 验收标准 |
 |---|---|---|---|
@@ -64,6 +64,8 @@
 | M23 | 简历条目（STAR） | 简历 | 一句话说清技术点与量化结果 |
 | M24 | 参考图媒体层：款式 → 授权参考图 + 来源 | `core/media.py`、`scripts/migrate_styles_v2.py` / `prefetch_media.py` / `validate_media.py` | 演示库 43/43 有图；推荐请求不联网；无图降级为纯文字；每张图带 license + source_url；测试 198 个 | ✅ 已完成（schema v2 + 本地 Provider 已跑通；Pexels 需 API Key；DeepSeek Search 实测 Fetch 无图，已移出默认图片链） |
 | M25 | 趋势/参考来源文本：DeepSeek Search → 链接与摘要 | `scripts/web_sources.py`、`core/media.py` 的 `search_sources()` | 输出 title / url / site / date / summary；不下载图片；缺 Key 时报错清晰；测试 +3 | ✅ 已完成（2026-10-26 真实 Key 实测：Search 可用、Fetch 只返回纯文本） |
+| M26 | Openverse（免 Key CC）候选图清单 | `scripts/openverse_candidates.py`、`core/media.py` 的 `OpenverseProvider` | CC0/PDM/BY/BY-SA 白名单；长边 ≥600；标题/tags 含美甲词；查询逐级降级；只产出候选清单 + `candidates.json`，人工复核后入库；测试 +9 | ✅ 已完成（真实 Openverse 实测：短查询可用、长查询常 0 结果；本机访问需代理） |
+| M27 | 样例库占位图 + 首页图廊 | `scripts/make_sample_images.py`、`core/ui_view.py` 的 `gallery_styles()`、`app/streamlit_app.py` | 样例库 15 条都有示意占位图；首页未推荐时先展示当前库 8 张款式图（缺图跳过）；卡片图宽自适应；测试 +7 | ✅ 已完成（15 张 768×1024 占位图随仓库提交；浏览器实测首页 8 图 + 图注正常） |
 
 ---
 

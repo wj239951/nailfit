@@ -58,7 +58,7 @@ nailfit/
 │   ├── selector.py          # 排序 + 三档 + 多样性
 │   ├── styles.py            # 款式库校验（字段 / 枚举 / 唯一性 / 图片）
 │   ├── labels.py            # 中文标签（特征名 / 甲型 / 场景）
-│   ├── media.py             # 参考图解析：缓存 → 本地图 → 网络 Provider → 占位（M24）
+│   ├── media.py             # 参考图解析：缓存 → 本地图 → 网络 Provider（Pexels / Openverse）→ 占位（M24/M26）
 │   ├── retriever.py         # 可选语义加权（bge-m3）
 │   ├── explainer.py         # LLM 生成理由（无 key 时模板降级）
 │   ├── validator.py         # 输出契约校验
@@ -80,6 +80,8 @@ nailfit/
 │   ├── migrate_styles_v2.py # 款式库升级 schema v2：brand / description / search_query / media
 │   ├── prefetch_media.py    # 预取参考图写缓存（local / Pexels；DeepSeek Search 实测无图）
 │   ├── web_sources.py       # DeepSeek Search → 趋势 / 参考来源文本（不下载图片）
+│   ├── openverse_candidates.py  # Openverse（免 Key CC）候选图清单：只产出候选、人工复核（M26）
+│   ├── make_sample_images.py    # 样例库占位示意图：按色系/款式/甲型画 15 张（M27）
 │   └── validate_media.py    # schema v2 媒体字段校验（授权 / 来源 / 图片存在）
 ├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层 / 评测 / 媒体层
 ├── eval/
@@ -88,13 +90,14 @@ nailfit/
 │   └── reports/             # 每次运行的 JSON 报告（gitignore）
 ├── models/                  # MediaPipe 模型缓存（gitignore，首次使用时自动下载）
 ├── raw_hands/               # 本地手照素材（gitignore）
-├── static/styles/           # 款式图片（按 style id 命名）
+├── static/styles/           # 款式图片（按 style id 命名；样例库 15 张占位图随仓库提交，可脚本重生成）
 ├── static/demo/             # 演示图片（不入库、不进 git，仅工程演示）
 ├── static/preview/          # 视觉层关键点标注图（gitignore）
+├── .cache/                  # 联网候选图缓存（Openverse 等，gitignore）
 └── docs/
     ├── design.md            # 设计说明
     ├── IMAGE_GUIDE.md       # 图片来源、选图标准与入库流程
-    └── ROADMAP.md           # 剩余任务清单（M1–M24）
+    └── ROADMAP.md           # 剩余任务清单（M1–M27）
 ```
 
 ## 快速开始
@@ -121,6 +124,9 @@ python eval/run.py
 python eval/run.py --vision             # 额外量手照识别（检测率 / 特征准确率）
 python eval/run.py --styles data/styles.demo.json   # 换 43 条演示库跑
 
+# 3.2 样例库占位图（M27，仓库已带 15 张；换库/删图后可重新生成）
+python scripts/make_sample_images.py
+
 # 4. 启动 API
 uvicorn api.main:app --reload --port 8000
 # Swagger: http://127.0.0.1:8000/docs
@@ -136,6 +142,9 @@ python scripts/vision_demo.py --dir raw_hands
 # 7. 大模型解释层（可选，M17）：把 .env 里的 DEEPSEEK_API_KEY 填好后
 python scripts/check_llm.py     # 自检：3/3 条理由由模型生成且通过契约校验
 python scripts/demo.py --llm    # 命令行用模型写理由（不配 Key 自动降级模板）
+
+# 8. 参考图候选（可选，M26）：Openverse 免 Key CC 图源，本机需代理；只产出候选清单
+python scripts/openverse_candidates.py --limit 5 --per-style 2 --proxy http://127.0.0.1:10090
 ```
 
 ---
@@ -268,12 +277,13 @@ streamlit run app/streamlit_app.py         # 默认 http://localhost:8501
 页面能力：
 
 - 输入方式切换：**手照识别**（上传手照 → 自动提特征）或 **手动选择特征**
+- 首页图廊：还没开始推荐时，先展示当前款式库 8 张款式图（缺图的自动跳过），避免打开页面一片空白
 - 手照识别：模型未下载时页面内一键下载；上传后展示质量、左右手、手势、ITA°，不可靠字段用下拉手动补（M11 回退）
 - 场景预设（短宽暖皮 / 纤细冷皮 / 浓郁节日 / 长甲 y2k）+ 7 个下拉逐个微调
 - 自由描述（参与语义加权）与「用大模型生成理由」开关（需 `DEEPSEEK_API_KEY`）
 - 款式库切换：样例库（15 条，占位图）/ 演示库（43 条，带演示图）
 - 三张卡展示：图片、档位、匹配度、推荐理由、避雷提示、命中规则
-- 「查看原始 JSON」便于调试和接下游
+- 「查看原始 JSON」便于调试和接下游，并可下载 JSON 文件
 
 前端只负责布局，特征校验、推荐编排、视图整理分别复用 `core.features` / `core.pipeline` / `core.ui_view`，手照识别复用 `core.vision`，和 CLI、FastAPI 行为一致。`tests/test_frontend.py` 用 Streamlit 官方 `AppTest` 做冒烟测试，没装 streamlit 时自动跳过。
 
@@ -316,6 +326,29 @@ python scripts/web_sources.py --query "2026 美甲流行趋势" --count 3
 **网络抓图实测结论（2026-10-26，真实 DeepSeek Key）**：Search 接口正常返回（`title` / `url` / `site_name` / `date` / `summary` / `authority` / `rerank_score`），但 **Fetch 返回的 Markdown 只有正文、不含图片**（8 个页面 0 命中，含 Wikipedia/WikiHow 这类图多的站点），部分站点还会 404 或 ReadTimeout。因此网络图片改由 Pexels / Unsplash（需各自 Key；本机实测 API 可达）或本地图库承担；DeepSeek Search 只用于「当前流行什么 / 出处在哪里」的文本证据（`scripts/web_sources.py`）。
 
 解析顺序是 `data/media_cache.json`（未过期）→ `static/` 本地图 → 网络 Provider（仅 prefetch）→ 占位。没图的款式不会阻塞推荐：卡片退化为纯文字，前端显示「暂无参考图 · 仅展示文字推荐」。每张图都带 `license` / `source_url`，前端统一标注「仅风格参考，非本手模拟效果」。
+
+#### 样例库占位图（M27）
+
+`data/styles.sample.json` 的 15 条示例款式原本指向 `static/styles/s00x.jpg`，但仓库里没有图 —— 切到「样例库」时卡片全是空白。现在用纯 PIL（无新依赖）按标签画**占位示意图**：色系决定配色、款式决定纹样（法式/猫眼/渐变/棋盘格…）、甲型决定甲片形状，图上有明确「样例库占位示意图 · 非真实款式」标注。
+
+```bash
+python scripts/make_sample_images.py            # 只补缺图（幂等，已有图跳过）
+python scripts/make_sample_images.py --force    # 全部重画
+python scripts/make_sample_images.py --dry-run  # 只统计要生成哪些
+```
+
+15 张占位图（768×1024）随仓库提交，克隆下来即可看到完整页面；生成逻辑在 `scripts/make_sample_images.py`，`tests/test_openverse_media.py` 校验尺寸与幂等。
+
+#### Openverse 候选图（M26）
+
+Pexels 注册暂停、DeepSeek Fetch 又不返回图片，所以补了一个**免 Key** 的 CC 图源 [Openverse](https://openverse.org)（Flickr / Wikimedia / 博物馆等开放许可图片）。它只产出**候选清单**，不自动进推荐链路 —— 款式对不对、清不清晰要人看一眼：
+
+```bash
+# 本机访问 Openverse 需要代理；限定前 5 款、每条最多 2 张
+python scripts/openverse_candidates.py --limit 5 --per-style 2 --proxy http://127.0.0.1:10090
+```
+
+产物：`.cache/openverse/<style_id>/<rank>.jpg`（候选图）+ `.cache/openverse/candidates.json`（含 title / creator / CC 许可 / 来源页 / 相关性 / 复核状态）。内置三道过滤：CC0·PDM·BY·BY-SA 许可白名单、长边 ≥600px、标题或 tags 必须出现美甲词；长查询常 0 结果，所以用「色系 + 款式 + 甲型」拼短查询并逐级降级（`openverse_queries()`）。人工复核通过后，再把 `media.image` / `license: openverse` / `source_url` 写进款式库。
 
 ### 自动打标签（M7）
 
@@ -474,7 +507,7 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 | `search_query` | 联网找参考图时用的查询词（中文短句） |
 | `media` | `{image, source_url, license, provider, relevance, fetched_at, verified, note}` |
 
-`media.license` 取值：`demo`（本地演示图）/ `self`（自摄或自有授权）/ `pexels` / `unsplash`（可商用图库）/ `unknown`（公开网页，商用前必须确认授权）/ `placeholder`（无图）。非本地授权必须带 `source_url`。
+`media.license` 取值：`demo`（本地演示图）/ `self`（自摄或自有授权）/ `pexels` / `unsplash`（可商用图库）/ `openverse`（Openverse CC 候选，人工复核后入库）/ `unknown`（公开网页，商用前必须确认授权）/ `placeholder`（无图）。非本地授权必须带 `source_url`。
 
 媒体缓存 `data/media_cache.json` 结构：`{version, updated_at, items: {style_id: media}}`，由 `prefetch_media.py` 生成，可随项目分发以复现演示效果。
 
@@ -487,6 +520,7 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 ## 图片来源
 
 正式款式库优先用**自拍 / 可商用图库**（Pexels、Unsplash 等）；小红书等平台截图只作本地演示参考，版权归原作者。
+没有图库 Key 时，可用 `scripts/openverse_candidates.py` 从 [Openverse](https://openverse.org) 拉 CC0/PDM/BY/BY-SA 候选图（只产出候选清单，人工复核并保留 `creator` / `license` / `source_url` 后才能入库）。
 完整规范（授权优先级、选图标准、裁剪压缩、免责声明）见 [docs/IMAGE_GUIDE.md](docs/IMAGE_GUIDE.md)。
 
 另有 43 张处理好的**演示图**在 `static/demo/`（来源为平台截图，仅工程演示：README 截图 / 前端占位 / 面试示意；**不登记进款式库、不进 git**）。映射表与逐张处理命令见 IMAGE_GUIDE 第 6 节。

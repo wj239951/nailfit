@@ -70,6 +70,37 @@ def image_file(image: str | None) -> Path | None:
     return path if path.exists() else None
 
 
+def gallery_styles(styles_path: str | None, *, limit: int = 8) -> list[dict]:
+    """首页「款式库图廊」：从指定款式库挑前 N 条**有图**的款式。
+
+    返回 [{"style_id", "name", "image": Path, "caption"}]。缺图的条目直接跳过，
+    这样首页不会出现空白占位；`limit=0` 表示不限制条数。
+    """
+    if not styles_path:
+        return []
+    try:
+        styles = list(load_styles(styles_path))
+    except Exception:  # noqa: BLE001 - 坏库文件不阻塞首页，交给校验脚本报错
+        return []
+    result: list[dict] = []
+    for style in styles:
+        if limit and len(result) >= limit:
+            break
+        image = image_file((style.get("media") or {}).get("image") or style.get("image"))
+        if image is None:
+            continue
+        tags = "、".join(str(tag) for tag in (style.get("tags") or [])[:3])
+        result.append(
+            {
+                "style_id": style.get("id"),
+                "name": style.get("name") or style.get("id"),
+                "image": image,
+                "caption": f"{style.get('name') or style.get('id')} · {tags}" if tags else str(style.get("name") or ""),
+            }
+        )
+    return result
+
+
 def build_features(selection: dict[str, str]) -> HandFeatures:
     """把前端下拉框的取值组装成 HandFeatures 并校验（与后端同一套校验）。
 

@@ -47,6 +47,7 @@ from core.ui_view import (  # noqa: E402
     avoid_tips,
     card_view,
     default_library_label,
+    gallery_styles,
     generate,
     library_choices,
     payload_json,
@@ -278,6 +279,7 @@ def render_vision_area() -> None:
         st.error(f"手照识别失败：{vision_error}")
     if not meta:
         st.info("在左侧上传手照并点击 **识别手部特征**；也可以用左边的「手动选择特征」直接开始。")
+        render_gallery()
         return
 
     quality = str(meta.get("quality"))
@@ -386,7 +388,7 @@ def render_sidebar() -> None:
 def render_card(index: int, view: dict) -> None:
     with st.container(border=True):
         if view["image"] is not None:
-            st.image(str(view["image"]))
+            st.image(str(view["image"]), width="stretch")
         else:
             st.info("这张推荐暂无可展示的款式图（占位数据）。")
         if view.get("media_caption"):
@@ -446,6 +448,35 @@ def render_result(payload: dict) -> None:
 
     with st.expander("查看原始 JSON（便于调试 / 接下游）"):
         st.code(payload_json(payload), language="json")
+        st.download_button(
+            "下载推荐结果 JSON",
+            data=payload_json(payload),
+            file_name="nailfit_recommendation.json",
+            mime="application/json",
+            width="stretch",
+        )
+
+
+def render_gallery() -> None:
+    """首页图廊：先给用户看「这个系统长什么样」，再让他去选特征。
+
+    只展示当前款式库里**确实有图**的款式；一条都没有时给出可执行的修复提示，
+    避免页面出现一堆空白占位或干脆什么都不显示。
+    """
+    items = gallery_styles(_styles_path(), limit=8)
+    st.subheader("先看看款式库")
+    if not items:
+        st.caption(
+            "当前款式库没有可展示的图片。运行 `python scripts/make_sample_images.py` "
+            "生成样例库占位图，或在侧边栏切到「演示库（带演示图）」后再刷新。"
+        )
+        return
+    current = st.session_state.get("lib_label") or ""
+    st.caption(f"{current} ｜ 这里先展示 {len(items)} 款；点击 **开始推荐** 看完整三档推荐与理由。")
+    columns = st.columns(4)
+    for index, item in enumerate(items):
+        with columns[index % 4]:
+            st.image(str(item["image"]), caption=item["caption"], width="stretch")
 
 
 def render_manual_area() -> None:
@@ -465,6 +496,7 @@ def render_manual_area() -> None:
         render_result(payload)
     else:
         st.info("在左侧选择特征（或用场景预设），然后点击 **开始推荐**。")
+        render_gallery()
         st.markdown(
             "还没有直觉？先试这几个预设：\n"
             + "\n".join(f"- **{SCENARIO_LABELS[name]}** — `{name}`" for name in SCENARIOS)

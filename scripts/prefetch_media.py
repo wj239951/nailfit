@@ -8,6 +8,9 @@
     python scripts/prefetch_media.py --provider pexels --limit 5  # 先小批量试跑
     python scripts/prefetch_media.py --provider search            # 需 DEEPSEEK_API_KEY
 
+Openverse（免 Key CC 图源）的图片需要人工复核，因此不接入本脚本的自动缓存，
+请用 scripts/openverse_candidates.py 先产出候选清单、复核后再入库。
+
 输出 data/media_cache.json（可随项目分发，保证演示可复现）。
 退出码：0 = 全部有图；1 = 有缺失 / Provider 不可用 / 抓取失败。
 """

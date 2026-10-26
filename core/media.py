@@ -8,8 +8,11 @@
 - 授权必须可标注：每张图带 license / source_url，前端据此显示「风格参考」与来源。
 
 解析顺序：缓存（未过期）→ LocalProvider（static/ 下已有图）→ 网络 Provider → 占位。
-网络 Provider（Pexels / DeepSeek Search）只在 prefetch 时启用（allow_network=True），
+网络 Provider（Pexels / DeepSeek Search / Openverse）只在 prefetch 时启用（allow_network=True），
 推荐请求路径默认不联网。
+
+Openverse（M26）是免 Key 的 CC 图源，标题相关性有限：先产出「候选图清单」人工复核，
+再决定是否进正式库（scripts/openverse_candidates.py）。
 """
 
 from __future__ import annotations
@@ -25,12 +28,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CACHE_PATH = ROOT / "data" / "media_cache.json"
 DEFAULT_REFS_DIR = ROOT / "static" / "refs"
 
-LICENSES = ("demo", "self", "pexels", "unsplash", "unknown", "placeholder")
+LICENSES = ("demo", "self", "pexels", "unsplash", "openverse", "unknown", "placeholder")
 LICENSE_LABELS = {
     "demo": "工程演示素材",
     "self": "自摄 / 自有授权",
     "pexels": "Pexels（可商用）",
     "unsplash": "Unsplash（可商用）",
+    "openverse": "Openverse CC 图（需署名）",
     "unknown": "公开网页",
     "placeholder": "占位",
 }
@@ -39,6 +43,46 @@ PLACEHOLDER_NOTE = "暂无参考图：检索层未命中，仅展示文字推荐
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 _MD_IMAGE_RE = re.compile(r"!\[[^\]]*\]\((https?://[^)\s]+)")
 _IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".webp")
+
+# ---------------------------------------------------------------- Openverse
+# 免 Key 的 CC 图源：https://api.openverse.org/v1/images/
+# 2026-10-26 实测：API 可用（license 过滤与 page_size 生效），但标题经常是 IMG_1234，
+# 关键词只命中 tags；相关性需要过滤 + 人工复核，不能全自动进正式库。
+OPENVERSE_API_URL = "https://api.openverse.org/v1/images/"
+OPENVERSE_LICENSES = ("cc0", "pdm", "by", "by-sa")  # 允许展示/商用的 CC 许可
+OPENVERSE_MIN_EDGE = 600  # 长边像素下限：太小的图不适合做参考图
+_NAIL_TOKENS = ("nail", "nails", "manicure", "manicures", "fingernail", "fingernails", "nailart")
+_OPENVERSE_STYLE_WORDS = {
+    "solid": "solid color",
+    "french": "french manicure",
+    "gradient": "gradient",
+    "cat_eye": "cat eye",
+    "chrome": "chrome",
+    "drawing": "nail art",
+    "rhinestone": "rhinestone",
+    "checker": "checkered",
+    "marble": "marble",
+    "mixed": "nail art",
+    "glitter": "glitter",
+}
+_OPENVERSE_FAMILY_WORDS = {
+    "nude_pink": "nude pink",
+    "true_red": "red",
+    "berry": "berry",
+    "orange_brown": "orange brown",
+    "blue_green": "blue green",
+    "mono": "monochrome",
+    "metal": "metallic",
+    "glitter": "glitter",
+}
+_OPENVERSE_SHAPE_WORDS = {
+    "round": "round",
+    "square": "square",
+    "oval": "oval",
+    "almond": "almond",
+    "squoval": "squoval",
+}
+
 
 
 def _now_iso() -> str:
@@ -76,6 +120,11 @@ def media_caption(media: dict | None) -> str:
         return f"图片：{label} · {REFERENCE_TAIL}"
     if license_name == "self":
         return f"图片：{label} · {REFERENCE_TAIL}"
+    if license_name == "openverse":
+        detail = str(media.get("license_detail") or "CC 授权").strip()
+        creator = str(media.get("creator") or "").strip()
+        byline = f" · 作者 {creator}" if creator else ""
+        return f"图片：{detail}{byline} · {REFERENCE_TAIL}"
     return f"图片来自网络（{label}）· {REFERENCE_TAIL}"
 
 
@@ -98,6 +147,8 @@ class MediaResult:
     fetched_at: str | None = None
     verified: bool = False
     note: str | None = None
+    creator: str | None = None
+    license_detail: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -367,6 +418,242 @@ class SearchProvider:
             )
         sources.sort(key=lambda source: source["relevance"], reverse=True)
         return sources[:count]
+
+
+# ---------------------------------------------------------------- Openverse
+
+
+def _openverse_text(item: dict) -> str:
+    """标题 + tags 拼成小写文本：Openverse 标题常是 IMG_1234，相关性主要看 tags。"""
+    parts = [str(item.get("title") or "")]
+    for tag in item.get("tags") or []:
+        if isinstance(tag, dict):
+            name = str(tag.get("name") or "").strip()
+            if name:
+                parts.append(name)
+    return " ".join(parts).lower()
+
+
+def openverse_queries(style: dict) -> list[str]:
+    """款式 → Openverse 英文检索词（从具体到宽泛，逐个兜底）。
+
+    为什么不用 search_query：库里是中文，Openverse 是英文全文检索；
+    实测长查询（如 "nude pink french manicure oval"）会 0 结果，
+    所以用枚举字段拼短查询，并准备降级链。
+    """
+    family = _OPENVERSE_FAMILY_WORDS.get(str(style.get("color_family") or ""))
+    style_word = _OPENVERSE_STYLE_WORDS.get(str(style.get("style") or ""))
+    shape = next(
+        (
+            _OPENVERSE_SHAPE_WORDS[str(shape)]
+            for shape in style.get("shape") or []
+            if shape in _OPENVERSE_SHAPE_WORDS
+        ),
+        None,
+    )
+    words = [word for word in (family, style_word, shape) if word]
+    queries: list[str] = []
+    if words:
+        joined = " ".join(words)
+        queries.append(joined if "manicure" in joined else joined + " nails")
+    if family:
+        queries.append(family + " nails")
+    if style_word:
+        queries.append(style_word if style_word.endswith("manicure") else style_word + " nails")
+    queries.append("nails")
+    unique: list[str] = []
+    for query in queries:
+        query = query.strip()
+        if query and query not in unique:
+            unique.append(query)
+    return unique
+
+
+def _openverse_relevance(style: dict, item: dict) -> float:
+    """0-5 的相关性：必须出现美甲词（2 分），再按款式/色系/甲型词命中加分。"""
+    text = _openverse_text(item)
+    if not any(token in text for token in _NAIL_TOKENS):
+        return 0.0
+    score = 2.0
+    for word in openverse_queries(style)[0].split():
+        if word in ("nail", "nails", "manicure", "manicures"):
+            continue
+        if word in text:
+            score += 0.5
+    return round(min(score, 5.0), 1)
+
+
+class OpenverseProvider:
+    """Openverse（免 Key 的 CC 图源）：产出候选参考图，默认不进图片链。
+
+    实测（2026-10-26）：搜索可用；但标题相关性不稳定（搜 cat eye 可能命中
+    「Cat Processing 101」），因此这里做三道过滤：CC 许可白名单、长边尺寸、
+    「标题/tags 必须出现美甲词」。即便如此结果仍需人工复核，脚本只产出
+    候选清单（scripts/openverse_candidates.py），不自动写正式库。
+
+    网络需求：本机访问 Openverse 需代理，传 proxy="http://127.0.0.1:10090"
+    或设置 HTTPS_PROXY 环境变量（httpx 默认 trust_env）。
+    """
+
+    name = "openverse"
+
+    def __init__(
+        self,
+        *,
+        timeout: float = 8.0,
+        client=None,
+        refs_dir: str | Path = DEFAULT_REFS_DIR,
+        root: str | Path = ROOT,
+        licenses: tuple[str, ...] = OPENVERSE_LICENSES,
+        min_edge: int = OPENVERSE_MIN_EDGE,
+        proxy: str | None = None,
+        retries: int = 1,
+    ) -> None:
+        self.timeout = timeout
+        self._client = client
+        self.refs_dir = Path(refs_dir)
+        self.root = Path(root)
+        self.licenses = tuple(licenses)
+        self.min_edge = min_edge
+        self.proxy = proxy
+        self.retries = retries
+
+    def _http(self):
+        if self._client is not None:
+            return self._client
+        import httpx
+
+        kwargs: dict = {"timeout": self.timeout, "follow_redirects": True}
+        if self.proxy:
+            kwargs["proxy"] = self.proxy
+        self._client = httpx.Client(**kwargs)
+        return self._client
+
+    # ------------------------------------------------------------ 检索
+    def _request(self, query: str, *, limit: int) -> dict:
+        client = self._http()
+        params = {
+            "q": query,
+            "page_size": max(limit * 2, 6),
+            "license": ",".join(self.licenses),
+            "mature": "false",
+        }
+        last_error: Exception | None = None
+        for _ in range(self.retries + 1):
+            try:
+                response = client.get(OPENVERSE_API_URL, params=params, timeout=self.timeout)
+                response.raise_for_status()
+                return response.json() or {}
+            except Exception as exc:  # noqa: BLE001 - 检索失败统一转 ProviderError
+                last_error = exc
+        raise ProviderError(f"Openverse 检索失败（{query}）：{last_error}")
+
+    def _candidate(self, style: dict, item: dict) -> dict | None:
+        image_url = str(item.get("url") or "").strip()
+        landing = str(item.get("foreign_landing_url") or "").strip()
+        license_name = str(item.get("license") or "").lower()
+        if not image_url or not landing or license_name not in self.licenses:
+            return None
+        width = int(item.get("width") or 0)
+        height = int(item.get("height") or 0)
+        if max(width, height) < self.min_edge:
+            return None
+        relevance = _openverse_relevance(style, item)
+        if relevance < 2.0:
+            return None
+        version = str(item.get("license_version") or "").strip()
+        detail = f"CC {license_name.upper()}" + (f" {version}" if version else "")
+        return {
+            "title": str(item.get("title") or "").strip(),
+            "creator": str(item.get("creator") or "").strip(),
+            "license": license_name,
+            "license_version": version,
+            "license_detail": detail,
+            "attribution": str(item.get("attribution") or "").strip(),
+            "source": str(item.get("source") or "").strip(),
+            "category": str(item.get("category") or "").strip(),
+            "foreign_landing_url": landing,
+            "image_url": image_url,
+            "width": width,
+            "height": height,
+            "relevance": relevance,
+        }
+
+    def search(self, style: dict, *, limit: int = 3) -> list[dict]:
+        """按降级查询链检索，返回通过过滤的候选（未下载）。"""
+        seen: set[str] = set()
+        found: list[dict] = []
+        for query in openverse_queries(style)[:3]:
+            payload = self._request(query, limit=limit)
+            for item in payload.get("results") or []:
+                candidate = self._candidate(style, item)
+                if candidate and candidate["image_url"] not in seen:
+                    seen.add(candidate["image_url"])
+                    found.append(candidate)
+            if len(found) >= limit:
+                break
+        found.sort(
+            key=lambda item: (
+                item["relevance"] + (0.5 if item.get("category") == "photograph" else 0.0),
+                min(item["width"], item["height"]),
+            ),
+            reverse=True,
+        )
+        return found[:limit]
+
+    # ------------------------------------------------------------ 下载
+    def candidates(
+        self, style: dict, *, limit: int = 3, out_dir: str | Path | None = None
+    ) -> list[dict]:
+        """检索并下载候选图到缓存目录，返回带本地路径的候选清单。"""
+        target = Path(out_dir) if out_dir else self.root / ".cache" / "openverse"
+        style_id = str(style.get("id") or "style")
+        recorded: list[dict] = []
+        for rank, item in enumerate(self.search(style, limit=limit), start=1):
+            local = _download_image(
+                self._http(),
+                item["image_url"],
+                target / style_id,
+                f"{rank:02d}",
+                self.timeout,
+                root=self.root,
+            )
+            if not local:
+                continue
+            record = dict(item)
+            record["rank"] = rank
+            record["local_image"] = local
+            recorded.append(record)
+        return recorded
+
+    def resolve(self, style: dict) -> MediaResult | None:
+        """直接解析出一张参考图（写入 refs_dir）；正式入库前仍需人工复核。"""
+        results = self.search(style, limit=1)
+        if not results:
+            return None
+        item = results[0]
+        image = _download_image(
+            self._http(),
+            item["image_url"],
+            self.refs_dir,
+            str(style.get("id") or "style"),
+            self.timeout,
+            root=self.root,
+        )
+        if not image:
+            return None
+        return MediaResult(
+            image=image,
+            source_url=item["foreign_landing_url"],
+            license="openverse",
+            provider=self.name,
+            relevance=item["relevance"],
+            fetched_at=_today(),
+            verified=False,
+            note=f"Openverse · {item['creator']} · {item['license_detail']} · 候选图，需人工复核",
+            creator=item["creator"],
+            license_detail=item["license_detail"],
+        )
 
 
 class MediaResolver:

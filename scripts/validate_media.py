@@ -28,7 +28,8 @@ from core.media import LICENSES  # noqa: E402
 from core.styles import load_styles_json  # noqa: E402
 
 REQUIRED_TEXT_FIELDS = ("brand", "description", "search_query")
-WEB_LICENSES = ("pexels", "unsplash", "unknown")
+# 联网来源必须带 source_url 才能追溯；openverse 是 CC 许可，人工复核后入库
+WEB_LICENSES = ("pexels", "unsplash", "openverse", "unknown")
 
 
 def validate_media_styles(
