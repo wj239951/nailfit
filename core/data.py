@@ -26,6 +26,29 @@ LIBRARIES: dict[str, Path] = {
 DEFAULT_LIBRARY = "sample"
 
 
+# 自动打标（M7）的 tone 来自照片色相测量，容易被背景、灯光和滤镜带偏：
+# 例如浆果紫照片测出 hue≈29 就被判成 warm。规则引擎按「色系 × 冷暖」匹配，
+# 因此这里按色系的固有冷暖做一次确定性校准（M30），不让测色噪声压低压匹配度。
+TONE_BY_COLOR_FAMILY: dict[str, str] = {
+    "nude_pink": "warm",
+    "orange_brown": "warm",
+    "true_red": "neutral",
+    "berry": "cool",
+    "blue_green": "cool",
+    "mono": "neutral",
+    "metal": "neutral",
+    "glitter": "neutral",
+}
+
+
+def calibrated_tone(style: dict) -> str | None:
+    """按 color_family 反推正确冷暖；只有自动打标条目才需要校准。"""
+    if not style.get("autotag"):
+        return None
+    family = str(style.get("color_family") or "")
+    return TONE_BY_COLOR_FAMILY.get(family)
+
+
 def library_path(name: str) -> Path:
     """款式库名字 → 文件路径；未知名字抛 ValueError（接口层映射 422）。"""
     try:
@@ -108,6 +131,11 @@ def load_styles(path: str | None = None) -> tuple[dict, ...]:
         if style_id in seen_ids:
             raise DataFormatError(f"款式库 id 重复：{style_id}（{p}）")
         seen_ids.add(style_id)
+    # 自动打标条目：按 color_family 校正 tone（M30）。手工录入的条目不动。
+    for style in styles:
+        expected = calibrated_tone(style)
+        if expected and style.get("tone") != expected:
+            style["tone"] = expected
     return tuple(styles)
 
 

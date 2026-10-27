@@ -389,6 +389,22 @@ python scripts/demo.py --styles data/styles.demo.json --scenario slender_cool
 
 颜色维度（hue / color_family / tone / value / saturation）从图片主色计算；形状、工艺、长度、场景从文件名关键词推测。想人工修正，把字段写进 `data/demo_labels.json`（id → 字段），再 `python scripts/autotag.py --overrides data/demo_labels.json`。
 
+### 自动打标的冷暖校准（M30）
+
+照片主色测出的 `hue` 很容易被背景、灯光和滤镜带偏：例如浆果紫的猫眼甲照片测出 hue≈29，自动打标就给了 `tone=warm`。规则引擎按“色系 × 冷暖”匹配，这一位标错会让“冷调浅肤色”这类高权重规则命中不了，卡片匹配度肉眼可见地掉下去。
+
+M30 在 `core/data.py: load_styles()` 里对 `autotag: true` 的条目按色系做一次确定性校准：
+
+```python
+TONE_BY_COLOR_FAMILY = {
+    "nude_pink": "warm", "orange_brown": "warm", "true_red": "neutral",
+    "berry": "cool", "blue_green": "cool",
+    "mono": "neutral", "metal": "neutral", "glitter": "neutral",
+}
+```
+
+手工录入的款式不会被改动（自动化只负责自己产出的数据）。效果：同一组手部特征（细长甲床 / 椭圆 / 长甲 / 偏浅 / 冷调 / 标准 / 约会）在演示库上，三张卡匹配度从 `0.46 / 0.66 / 0.72` 提升到 `0.55 / 0.81 / 0.92`。回归测试见 `tests/test_tone_calibration.py`。
+
 ### 视觉层：手照 → 手部特征（M8/M9）
 
 装好 mediapipe 后，用 `scripts/vision_demo.py` 把一张手照变成和手工录入同口径的特征（模型缺失时会自动下载到 `models/`，约 8MB）：
