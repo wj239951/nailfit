@@ -302,9 +302,10 @@ npm run dev        # http://127.0.0.1:5173，/api、/static 自动代理到后�
 npm run build      # 产物在 dist/
 ```
 
-- 页面：推荐工作台（7 项特征 + 快捷预设 + 款式库切换 + 手照上传识别 + 三档结果卡 + 完整 JSON 下载）、款式库页（43/15 款全量浏览 + 色系/款式筛选）
+- 页面：推荐工作台（7 项特征 + 快捷预设 + 款式库切换 + 手照上传识别 + 三档结果卡 + 完整 JSON 下载）、款式库页（43/15 款全量浏览 + 色系/款式/甲长筛选）
 - 图片走同源 `/static/...`（后端已挂载 `StaticFiles`），不再依赖 Streamlit 的静态文件服务
 - 后端为此新增 `POST /api/vision/upload`（直接上传图片字节，临时目录识别后清理）、`GET /api/styles?library=sample|demo`、`POST /api/recommend` 的 `library` 字段；接口响应与 Streamlit 版一致
+- M31：甲长标签统一为「适合短甲 / 适合中长甲 / 适合长甲」，并在结果区加口径说明——`length_fit` 是**款式的设计适配甲长**，不是图片里模特的指甲长度；甲长较长时可做所有长度款式，想只看长甲款可用款式库的甲长筛选。演示库的该字段来自自动打标（启发式，非图片测量），正式库需人工复核。
 
 ## 款式库校验
 
@@ -572,7 +573,7 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 | `shape` | 推荐甲型列表（杏仁/椭圆/方圆形…） |
 | `color_family` / `tone` / `value` / `saturation` | 色彩属性 |
 | `style` | 款式（纯色/法式/渐变/猫眼/手绘…） |
-| `length_fit` | 该款式所需的最短甲长 |
+| `length_fit` | 该款式设计适配的甲长（`very_short/short/mid/long` 各自取单值；不是图片测量值，自动打标条目为启发式估算） |
 | `nail_bed_fit` | 适配的甲床类型 |
 | `scene` | 适用场景 |
 | `hue` | 色相角（0–360），用于三档去重 |
