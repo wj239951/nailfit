@@ -67,7 +67,7 @@ nailfit/
 │   └── vision.py            # 手照 → MediaPipe 关键点 → 手部特征（M8，可选依赖）
 ├── api/
 │   ├── main.py              # FastAPI 入口
-│   ├── routes.py            # /api/recommend /api/styles
+│   ├── routes.py            # /api/recommend /api/styles /api/libraries /api/vision /api/health
 │   └── schemas.py           # 请求/响应模型
 ├── app/
 │   └── streamlit_app.py     # Streamlit 网页前端（可选依赖，见 requirements-frontend.txt）
@@ -283,7 +283,9 @@ streamlit run app/streamlit_app.py         # 默认 http://localhost:8501
 - 手照识别：模型未下载时页面内一键下载；上传后展示质量、左右手、手势、ITA°，不可靠字段用下拉手动补（M11 回退）
 - 场景预设（短宽暖皮 / 纤细冷皮 / 浓郁节日 / 长甲 y2k）+ 7 个下拉逐个微调
 - 自由描述（参与语义加权）与「用大模型生成理由」开关（需 `DEEPSEEK_API_KEY`）
-- 款式库切换：样例库（15 条，占位图）/ 演示库（43 条，带演示图）
+- 款式库切换：样例库（15 条，占位示意图）/ 演示库（43 条，真实截图）；启动时调 `GET /api/libraries` 自动选图齐全的演示库，缺图时提示并退回样例库
+- 图片授权标注：演示素材 / 示意占位图 · 非真实款式 / 授权待确认，来源链接可点击
+- 无 Key 时（`GET /api/health` 的 `llm_configured=false`）大模型理由开关自动置灰，推荐降级为模板理由
 - 三张卡展示：图片、档位、匹配度、推荐理由、避雷提示、命中规则
 - 「查看原始 JSON」便于调试和接下游，并可下载 JSON 文件
 
@@ -456,6 +458,36 @@ curl 'http://127.0.0.1:8000/api/styles?library=demo'   # 43 款演示库
 curl 'http://127.0.0.1:8000/api/styles'                # 15 款样例库（默认）
 ```
 
+### `GET /api/libraries`
+
+可选款式库 + 图片齐全度（Vue 前端据此自动选择默认库）：
+
+```bash
+curl 'http://127.0.0.1:8000/api/libraries'
+```
+
+```json
+{
+  "default": "sample",
+  "libraries": [
+    {"name": "demo", "count": 43, "available": true, "images_ready": true, "missing_images": 0},
+    {"name": "sample", "count": 15, "available": true, "images_ready": true, "missing_images": 0}
+  ]
+}
+```
+
+规则：优先演示库（真实截图），`images_ready` 为 false 时前端禁用该库并提示重跑
+`scripts/prepare_images.py`；都没图时退回样例库占位图。
+
+### `GET /api/health`
+
+```json
+{"status": "ok", "service": "nailfit", "llm_configured": true}
+```
+
+`llm_configured` 表示后端是否配置了 `DEEPSEEK_API_KEY`：false 时前端会把「用大模型生成理由」置灰，
+推荐仍可用（自动降级为模板理由）。
+
 ### `POST /api/vision/extract`（M8/M9）
 
 手照路径 → 手部特征（只识别，不推荐）：
@@ -543,7 +575,7 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 | `search_query` | 联网找参考图时用的查询词（中文短句） |
 | `media` | `{image, source_url, license, provider, relevance, fetched_at, verified, note}` |
 
-`media.license` 取值：`demo`（本地演示图）/ `self`（自摄或自有授权）/ `pexels` / `unsplash`（可商用图库）/ `openverse`（Openverse CC 候选，人工复核后入库）/ `unknown`（公开网页，商用前必须确认授权）/ `placeholder`（无图）。非本地授权必须带 `source_url`。
+`media.license` 取值：`demo`（本地演示图）/ `self`（自摄或自有授权）/ `pexels` / `unsplash`（可商用图库）/ `openverse`（Openverse CC 候选，人工复核后入库）/ `unknown`（公开网页，商用前必须确认授权）/ `placeholder`（占位示意图：有图但不是真实款式；无图时卡片退化为文字）。非本地授权必须带 `source_url`。前端标注规则：`demo` → 「工程演示素材」，`placeholder` → 「示意占位图 · 非真实款式」，其余 → 「仅风格参考，非本手模拟效果」。
 
 媒体缓存 `data/media_cache.json` 结构：`{version, updated_at, items: {style_id: media}}`，由 `prefetch_media.py` 生成，可随项目分发以复现演示效果。
 

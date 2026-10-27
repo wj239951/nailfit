@@ -63,3 +63,31 @@ def test_recommend_unknown_library_422() -> None:
     r = client.post("/api/recommend", json=_payload(library="nope"))
     assert r.status_code == 422
     assert "未知款式库" in r.json()["detail"]
+
+
+def test_libraries_lists_availability() -> None:
+    r = client.get("/api/libraries")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["default"] == "sample"
+    by_name = {item["name"]: item for item in body["libraries"]}
+    assert set(by_name) >= {"sample", "demo"}
+    assert by_name["sample"]["count"] == 15
+    assert by_name["sample"]["available"] is True
+    assert by_name["sample"]["images_ready"] is True
+
+
+def test_health_reports_llm_flag() -> None:
+    r = client.get("/api/health")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ok"
+    assert isinstance(body["llm_configured"], bool)
+
+
+def test_sample_library_cards_use_placeholder_license() -> None:
+    """样例库图片是示意占位图，不能标成「演示素材」。"""
+    r = client.post("/api/recommend", json=_payload())
+    assert r.status_code == 200
+    cards = r.json()["recommendations"]
+    assert all(card["media"]["license"] == "placeholder" for card in cards)

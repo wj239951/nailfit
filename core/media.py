@@ -114,7 +114,12 @@ def media_caption(media: dict | None) -> str:
     label = LICENSE_LABELS.get(license_name, "公开网页")
     if license_name == "demo":
         return f"{label} · {REFERENCE_TAIL}"
-    if license_name == "placeholder" or not media.get("image"):
+    if license_name == "placeholder":
+        # 占位示意图（样例库）与「没有图」不是一回事：前者有图但只是界面演示，不能叫演示素材
+        if media.get("image"):
+            return "示意占位图 · 非真实款式"
+        return "暂无参考图 · 仅展示文字推荐"
+    if not media.get("image"):
         return "暂无参考图 · 仅展示文字推荐"
     if license_name in ("pexels", "unsplash"):
         return f"图片：{label} · {REFERENCE_TAIL}"
@@ -203,7 +208,7 @@ class LocalProvider:
         return MediaResult(
             image=str(image),
             source_url=media.get("source_url"),
-            license=str(media.get("license") or "demo"),
+            license=str(media.get("license") or "placeholder"),
             provider=self.name,
             relevance=media.get("relevance"),
             fetched_at=media.get("fetched_at") or _today(),

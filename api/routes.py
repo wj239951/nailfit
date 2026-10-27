@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import os
 import shutil
 import tempfile
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
 
-from core.data import library_path, load_styles, load_taxonomy
+from core.data import DEFAULT_LIBRARY, LIBRARIES, ROOT, library_path, load_styles, load_taxonomy
 from core.errors import (
     DataFormatError,
     EmptyStyleLibraryError,
@@ -39,7 +40,37 @@ MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 
 @router.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "nailfit"}
+    return {
+        "status": "ok",
+        "service": "nailfit",
+        # 前端据此决定是否可勾选「用大模型生成理由」；没有 Key 时后端会自动降级为模板
+        "llm_configured": bool(os.getenv("DEEPSEEK_API_KEY")),
+    }
+
+
+@router.get("/libraries")
+def list_libraries() -> dict:
+    """可选款式库 + 图片齐全度。前端据此决定默认库与「演示图缺失」提示。"""
+    items: list[dict] = []
+    for name in sorted(LIBRARIES):
+        item: dict = {"name": name, "count": 0, "available": False, "images_ready": False}
+        try:
+            styles = load_styles(str(LIBRARIES[name]))
+        except (EmptyStyleLibraryError, DataFormatError):
+            items.append(item)
+            continue
+        if styles:
+            item["count"] = len(styles)
+            item["available"] = True
+            missing = 0
+            for style in styles:
+                image = (style.get("media") or {}).get("image") or style.get("image") or ""
+                if not (ROOT / str(image)).is_file():
+                    missing += 1
+            item["images_ready"] = missing == 0
+            item["missing_images"] = missing
+        items.append(item)
+    return {"default": DEFAULT_LIBRARY, "libraries": items}
 
 
 @router.get("/taxonomy")
