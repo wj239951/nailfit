@@ -49,6 +49,7 @@ nailfit/
 │   ├── rules.yaml           # 匹配规则（改规则不改代码）
 │   ├── styles.sample.json   # 款式库样例（15 条，替换成真实款式）
 │   ├── styles.demo.json     # 演示款式库（43 条，autotag 自动生成，仅演示，schema v2）
+│   ├── references.json      # 网络参考图清单（M32，prefetch 生成；图片在 static/refs/）
 │   └── media_cache.json     # 参考图缓存（prefetch 生成；缺失时卡片退化为纯文字）
 ├── core/
 │   ├── data.py              # YAML / JSON 加载（文件缺失/损坏时报清晰错误）
@@ -61,6 +62,7 @@ nailfit/
 │   ├── styles.py            # 款式库校验（字段 / 枚举 / 唯一性 / 图片）
 │   ├── labels.py            # 中文标签（特征名 / 甲型 / 场景）
 │   ├── media.py             # 参考图解析：缓存 → 本地图 → 网络 Provider（Pexels / Openverse）→ 占位（M24/M26）
+│   ├── references.py        # 网络参考图清单加载 + 推荐响应挂载（M32）
 │   ├── retriever.py         # 可选语义加权（bge-m3）
 │   ├── explainer.py         # LLM 生成理由（无 key 时模板降级）
 │   ├── validator.py         # 输出契约校验
@@ -83,6 +85,7 @@ nailfit/
 │   ├── prefetch_media.py    # 预取参考图写缓存（local / Pexels；DeepSeek Search 实测无图）
 │   ├── web_sources.py       # DeepSeek Search → 趋势 / 参考来源文本（不下载图片）
 │   ├── openverse_candidates.py  # Openverse（免 Key CC）候选图清单：只产出候选、人工复核（M26）
+│   ├── prefetch_references.py   # 网络参考图预取：Openverse CC → static/refs/ + data/references.json（M32）
 │   ├── make_sample_images.py    # 样例库占位示意图：按色系/款式/甲型画 15 张（M27）
 │   └── validate_media.py    # schema v2 媒体字段校验（授权 / 来源 / 图片存在）
 ├── tests/                   # pytest：规则 / 选择 / 校验 / 手工录入 / 款式库 / 图片处理 / 视觉层 / 评测 / 媒体层
@@ -93,6 +96,7 @@ nailfit/
 ├── models/                  # MediaPipe 模型缓存（gitignore，首次使用时自动下载）
 ├── raw_hands/               # 本地手照素材（gitignore）
 ├── static/styles/           # 款式图片（按 style id 命名；样例库 15 张占位图随仓库提交，可脚本重生成）
+├── static/refs/             # 网络参考图缓存（M32，gitignore；清单随仓库提交）
 ├── static/demo/             # 演示图片（不入库、不进 git，仅工程演示）
 ├── static/preview/          # 视觉层关键点标注图（gitignore）
 ├── .cache/                  # 联网候选图缓存（Openverse 等，gitignore）
@@ -406,6 +410,30 @@ TONE_BY_COLOR_FAMILY = {
 
 手工录入的款式不会被改动（自动化只负责自己产出的数据）。效果：同一组手部特征（细长甲床 / 椭圆 / 长甲 / 偏浅 / 冷调 / 标准 / 约会）在演示库上，三张卡匹配度从 `0.46 / 0.66 / 0.72` 提升到 `0.55 / 0.81 / 0.92`。回归测试见 `tests/test_tone_calibration.py`。
 
+### 网络参考图（M32）
+
+推荐卡的主图仍然是款式库里的真实条目（`style_id` 可追溯，契约不破）。M32 在每张卡下方再补 2–3 张**同风格的 CC 授权网图**，方便面试/演示时看出“这个风格长什么样”，同时不引入版权风险：
+
+- 图源：Openverse（CC0 / PDM / CC BY / CC BY-SA 白名单；本机需代理才能访问）
+- 预取：`scripts/prefetch_references.py` 一次抓完 → 图片存 `static/refs/`（gitignore）、清单存 `data/references.json`（入库）
+- 运行时：只读本地清单，**离线可用**；清单缺失/图片不存在时自动跳过，卡片不破图
+- 展示：卡片右下「网络参考图」缩略图，点击跳原作者页面（标注 `license · author`）
+
+```bash
+# 演示库 43 款、每款 3 张（首次较慢；需要能访问 Openverse，本机走代理）
+python scripts/prefetch_references.py --library demo --per-style 3 \
+    --proxy http://127.0.0.1:10090
+
+# 先小范围试跑：只跑 5 款、每款 2 张
+python scripts/prefetch_references.py --library demo --limit 5 --per-style 2 \
+    --proxy http://127.0.0.1:10090
+
+# 只检索不下载，看看能搜到什么
+python scripts/prefetch_references.py --library demo --limit 3 --dry-run
+```
+
+清单格式与加载逻辑见 `core/references.py`：`data/references.json` 的 `entries[style_id]` 里每条包含 `image / title / author / license / source_url / provider`；API 的 `/api/recommend` 响应在每张推荐卡上多一个 `references` 数组。
+
 ### 视觉层：手照 → 手部特征（M8/M9）
 
 装好 mediapipe 后，用 `scripts/vision_demo.py` 把一张手照变成和手工录入同口径的特征（模型缺失时会自动下载到 `models/`，约 8MB）：
@@ -466,6 +494,24 @@ python scripts/vision_demo.py --dir raw_hands --json out_hands.json
 ```
 
 返回三张推荐卡（含 `matched_rules` 与 `reason`）、以及 `avoid` 避雷提示。`library` 可选 `sample`（默认，15 款样例/占位图）或 `demo`（43 款演示库/真实截图），未知库名返回 `422`。
+
+每张推荐卡还带 `references`（M32 网络参考图，见「网络参考图」章节）：
+
+```json
+"references": [
+  {
+    "image": "static/refs/d003/01.jpg",
+    "title": "指甲油图片",
+    "author": "jhanvigajjar22",
+    "license": "cc0",
+    "license_label": "CC0",
+    "source_url": "https://wordpress.org/photos/photo/6568a5abf0/",
+    "provider": "openverse"
+  }
+]
+```
+
+没有预取清单或清单里没有该款式时为 `[]`（前端不渲染参考图区块），不影响推荐本身。
 
 ### `GET /api/styles`
 款式库列表（用于前端展示与调试）。库为空或数据损坏时返回 `503`；`library` 查询参数可选 `sample`（默认）/ `demo`，未知库名返回 `422`。
@@ -596,6 +642,8 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 
 媒体缓存 `data/media_cache.json` 结构：`{version, updated_at, items: {style_id: media}}`，由 `prefetch_media.py` 生成，可随项目分发以复现演示效果。
 
+参考图清单 `data/references.json`（M32）结构：`{version, updated_at, entries: {style_id: [{image, title, author, license, license_label, source_url, provider}]}}`，由 `prefetch_references.py` 生成；图片本体在 `static/refs/`（gitignore）。图片缺失或清单损坏时自动跳过、不报错。
+
 ## 评测（M18 / M19 已完成）
 
 - ✅ 25 条用例（8 手工特征 + 17 手照）的契约 / 合理性 / 多样性 / 稳定性，见「推荐质量评测」
@@ -607,6 +655,8 @@ pytest -q tests/test_edge_cases.py -v             # 14 个边界用例
 正式款式库优先用**自拍 / 可商用图库**（Pexels、Unsplash 等）；小红书等平台截图只作本地演示参考，版权归原作者。
 没有图库 Key 时，可用 `scripts/openverse_candidates.py` 从 [Openverse](https://openverse.org) 拉 CC0/PDM/BY/BY-SA 候选图（只产出候选清单，人工复核并保留 `creator` / `license` / `source_url` 后才能入库）。
 完整规范（授权优先级、选图标准、裁剪压缩、免责声明）见 [docs/IMAGE_GUIDE.md](docs/IMAGE_GUIDE.md)。
+
+**网络参考图（M32）**：`data/references.json` 里的参考图全部来自 Openverse 的 CC0/PDM/BY/BY-SA 白名单，每张都记录 `author / license / source_url`，前端点击缩略图跳转作者页面；图片本体在 `static/refs/`（gitignore），不进仓库。预取命令见「网络参考图（M32）」章节。
 
 另有 43 张处理好的**演示图**在 `static/demo/`（来源为平台截图，仅工程演示：README 截图 / 前端占位 / 面试示意；**不登记进款式库、不进 git**）。映射表与逐张处理命令见 IMAGE_GUIDE 第 6 节。
 

@@ -20,6 +20,7 @@ from core.pipeline import (
     recommend,
     recommend_from_image,
 )
+from core.references import attach_references
 from core.validator import ContractError
 from core.vision import VisionError
 
@@ -115,7 +116,9 @@ def recommend_endpoint(req: RecommendRequest) -> dict:
 
     # 3) 业务侧：区分「服务端数据问题（503）」和「输入太苛刻（422）」
     try:
-        return recommend(features, free_text=req.free_text, use_llm=req.use_llm, styles=styles)
+        return attach_references(
+            recommend(features, free_text=req.free_text, use_llm=req.use_llm, styles=styles)
+        )
     except (EmptyStyleLibraryError, DataFormatError) as exc:
         raise HTTPException(status_code=503, detail=f"款式库不可用: {exc}") from exc
     except NoCandidateError as exc:
@@ -144,13 +147,15 @@ def vision_extract_endpoint(req: VisionExtractRequest) -> dict:
 def recommend_from_image_endpoint(req: RecommendFromImageRequest) -> dict:
     """手照直接出推荐（M9）。质量不达标时 422，前端转手工录入（M11）。"""
     try:
-        return recommend_from_image(
-            req.image_path,
-            scene=req.scene,
-            use_llm=req.use_llm,
-            free_text=req.free_text,
-            overrides=req.overrides,
-            auto_download=req.auto_download,
+        return attach_references(
+            recommend_from_image(
+                req.image_path,
+                scene=req.scene,
+                use_llm=req.use_llm,
+                free_text=req.free_text,
+                overrides=req.overrides,
+                auto_download=req.auto_download,
+            )
         )
     except VisionError as exc:
         raise HTTPException(status_code=422, detail=f"手照识别失败: {exc}") from exc

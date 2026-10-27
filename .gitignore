@@ -24,6 +24,10 @@ out_*.json
 # 联网抓取的候选/缓存（Openverse 候选清单等，不进仓库）
 .cache/
 
+# 参考图缓存（scripts/prefetch_references.py 下载，体积大不进仓库；
+# 清单 data/references.json 进仓库，运行时缺图会自动跳过）
+static/refs/
+
 # 演示图片（仅本地演示用，不进仓库）
 static/demo/
 

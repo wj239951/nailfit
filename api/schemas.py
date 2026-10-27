@@ -29,6 +29,18 @@ class RecommendRequest(BaseModel):
     )
 
 
+class ReferenceImage(BaseModel):
+    """网络参考图（M32）：CC 授权、预取缓存，展示在推荐卡下方。"""
+
+    image: str = Field(description="static/ 下的本地路径")
+    title: str | None = None
+    author: str | None = None
+    license: str = Field(description="cc0 / pdm / by / by-sa")
+    license_label: str | None = None
+    source_url: str | None = Field(default=None, description="原始页面（授权/作者出处）")
+    provider: str = "openverse"
+
+
 class StyleCard(BaseModel):
     style_id: str
     name: str | None = None
@@ -46,6 +58,10 @@ class StyleCard(BaseModel):
     media: dict[str, Any] | None = Field(
         default=None,
         description="参考图与来源（image/source_url/license/provider/relevance），失败时为占位",
+    )
+    references: list[ReferenceImage] = Field(
+        default_factory=list,
+        description="网络参考图（CC 授权，M32；无预取清单时为空列表）",
     )
 
 
