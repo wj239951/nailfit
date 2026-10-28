@@ -136,9 +136,13 @@ def client():
     return TestClient(app)
 
 
+# API 层对 image_path 做了目录白名单（防任意文件读取），测试路径要落在 static/ 下
+API_IMAGE = "static/fake_hand.jpg"
+
+
 def test_api_vision_extract(client, fake_extract):
     fake_extract(make_result())
-    response = client.post("/api/vision/extract", json={"image_path": "fake_hand.jpg"})
+    response = client.post("/api/vision/extract", json={"image_path": API_IMAGE})
 
     assert response.status_code == 200
     body = response.json()
@@ -149,17 +153,26 @@ def test_api_vision_extract(client, fake_extract):
 
 def test_api_vision_extract_422(client, fake_extract):
     fake_extract(vision.VisionError("没检测到手"))
-    response = client.post("/api/vision/extract", json={"image_path": "missing.jpg"})
+    response = client.post("/api/vision/extract", json={"image_path": "static/missing.jpg"})
 
     assert response.status_code == 422
     assert "手照识别失败" in response.json()["detail"]
+
+
+def test_api_vision_extract_rejects_path_outside_whitelist(client, fake_extract):
+    """image_path 指向白名单目录之外（含路径穿越）时必须 422，且不能走到识别。"""
+    fake_extract(make_result())
+    for bad in ("../secret.jpg", "C:/Windows/win.ini", "/etc/passwd"):
+        response = client.post("/api/vision/extract", json={"image_path": bad})
+        assert response.status_code == 422
+        assert "不在允许的目录内" in response.json()["detail"]
 
 
 def test_api_recommend_from_image(client, fake_extract):
     fake_extract(make_result())
     response = client.post(
         "/api/recommend/from-image",
-        json={"image_path": "fake_hand.jpg", "scene": "commute"},
+        json={"image_path": API_IMAGE, "scene": "commute"},
     )
 
     assert response.status_code == 200
@@ -177,7 +190,7 @@ def test_api_recommend_from_image_422_for_bad_photo(client, fake_extract):
     )
     response = client.post(
         "/api/recommend/from-image",
-        json={"image_path": "fake_hand.jpg", "scene": "commute"},
+        json={"image_path": API_IMAGE, "scene": "commute"},
     )
 
     assert response.status_code == 422

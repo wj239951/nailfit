@@ -631,11 +631,14 @@ def _patch_rgb(np, bgr, x: float, y: float, half: int = 6) -> tuple[int, int, in
     return (int(r), int(g), int(b))
 
 
-def sample_skin(cv2, np, bgr, observation: HandObservation) -> tuple[int, int, int]:
+def sample_skin(cv2, np, bgr, observation: HandObservation) -> tuple[int, int, int] | None:
     """取手背/指根附近的皮肤中位色（避开指甲、高光、深色袖口和指缝阴影）。
 
     在掌心和指根周围撒一串小采样点，先过肤色 Lab 粗筛，再按亮度中位数过滤掉
     明显偏暗的阴影点，最后取中位色——自然角度（握拳、手朝镜头）下也尽量稳。
+
+    完全取不到可信皮肤像素（手套/极端光线）时返回 None，由调用方把
+    ita_band/warmth 降级为「不可靠」交给用户补选——不编造假肤色。
     """
     landmarks = observation.landmarks
     mask = _skin_mask(cv2, np, bgr)
@@ -705,7 +708,7 @@ def sample_skin(cv2, np, bgr, observation: HandObservation) -> tuple[int, int, i
     fallback = _patch_rgb(np, bgr, center[0], center[1])
     if fallback and _looks_like_skin(fallback):
         return fallback
-    return (200, 170, 150)
+    return None
 
 
 def draw_preview(cv2, np, bgr, observation: HandObservation, result_features: dict[str, str],
@@ -772,22 +775,27 @@ def extract(
 
     # 肤色：任何手势都能测皮肤（避开袖口/指甲后取中位色）
     rgb = sample_skin(cv2, np, bgr, observation)
-    skin = classify_skin(rgb)
-    features["ita_band"] = skin["ita_band"]
-    features["warmth"] = skin["warmth"]
-    metrics["ita_degrees"] = skin["ita_degrees"]
-    metrics["skin_luma"] = round(sum(rgb) / 3.0, 1)
-    confidences["ita_band"] = 0.75 if quality != "low" else 0.5
-    confidences["warmth"] = 0.55 if quality != "low" else 0.35
-    notes.append(f"皮肤采样 RGB={rgb}，Lab={skin['lab']}")
+    if rgb is None:
+        # 设计原则：不硬猜。取不到可信皮肤像素就降级为「不可靠」，交给用户下拉补选
+        unreliable.extend(["ita_band", "warmth"])
+        notes.append("肤色采样失败：没取到可信的皮肤像素（遮挡/极端光线），深浅和冷暖请用下拉补选")
+    else:
+        skin = classify_skin(rgb)
+        features["ita_band"] = skin["ita_band"]
+        features["warmth"] = skin["warmth"]
+        metrics["ita_degrees"] = skin["ita_degrees"]
+        metrics["skin_luma"] = round(sum(rgb) / 3.0, 1)
+        confidences["ita_band"] = 0.75 if quality != "low" else 0.5
+        confidences["warmth"] = 0.55 if quality != "low" else 0.35
+        notes.append(f"皮肤采样 RGB={rgb}，Lab={skin['lab']}")
 
-    # 逆光/欠曝时肤色会被判深：降置信度并提示，别让用户以为是自己肤色问题
-    if metrics["skin_luma"] < 140:
-        for key in ("ita_band", "warmth"):
-            confidences[key] = round(confidences[key] * 0.6, 2)
-        notes.append(
-            f"照片偏暗/逆光（手部亮度 {metrics['skin_luma']:.0f}），肤色可能被判深，建议顺光拍"
-        )
+        # 逆光/欠曝时肤色会被判深：降置信度并提示，别让用户以为是自己肤色问题
+        if metrics["skin_luma"] < 140:
+            for key in ("ita_band", "warmth"):
+                confidences[key] = round(confidences[key] * 0.6, 2)
+            notes.append(
+                f"照片偏暗/逆光（手部亮度 {metrics['skin_luma']:.0f}），肤色可能被判深，建议顺光拍"
+            )
 
     # 手型：palm_width / palm_length，需要手掌平面基本正对镜头
     if quality == "ok":

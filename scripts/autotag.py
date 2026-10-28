@@ -398,6 +398,20 @@ def main(argv: list[str] | None = None) -> int:
     if args.overrides:
         overrides = json.loads(Path(args.overrides).read_text(encoding="utf-8"))
 
+    out_path = Path(args.out)
+    # 护栏：本脚本只生成 version 1；目标已是 v2 库时拒绝覆盖，
+    # 否则会抹掉 migrate_styles_v2 补上的 brand/description/media 等字段
+    if not args.dry_run and out_path.exists():
+        try:
+            existing = json.loads(out_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            existing = None
+        if isinstance(existing, dict) and int(existing.get("version", 1)) >= 2:
+            print(f"[拒绝] 目标 {out_path} 已是 version {existing['version']} 款式库。")
+            print("  autotag 生成的是 version 1，直接覆盖会丢掉 brand/description/media 等 v2 字段。")
+            print("  确实要重建的话，先把旧文件改名备份，再重跑本脚本。")
+            return 1
+
     doc = build_library(args.src, overrides)
     if args.dry_run:
         families: dict[str, int] = {}
@@ -410,9 +424,11 @@ def main(argv: list[str] | None = None) -> int:
         print("工艺分布：", dict(sorted(styles.items(), key=lambda kv: -kv[1])))
         return 0
 
-    out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # 先写临时文件再原子替换：中途失败不会留下半截 JSON
+    tmp_path = out_path.with_name(out_path.name + ".tmp")
+    tmp_path.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp_path.replace(out_path)
     print(f"✓ 已生成 {out_path}（{len(doc['styles'])} 条）")
     print(f"下一步：python scripts/validate_styles.py --styles {out_path.name} --check-images")
     return 0

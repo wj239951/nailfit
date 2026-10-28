@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from conftest import requires_demo_images  # noqa: E402
 from core.errors import EmptyStyleLibraryError  # noqa: E402
 from core.features import FeatureError  # noqa: E402
 from core.presets import SCENE_LABELS, SCENARIOS, scene_options  # noqa: E402
@@ -101,6 +102,7 @@ def test_library_labels_carry_actual_counts() -> None:
     assert choices[demo_label].endswith("styles.demo.json")
 
 
+@requires_demo_images
 def test_demo_library_cards_have_images() -> None:
     """演示库的推荐卡片必须有可展示的图片（样例库才是占位图）。"""
     payload = generate(SCENARIOS["slender_cool"], styles_path="data/styles.demo.json", use_llm=False)
@@ -114,6 +116,7 @@ def test_image_file_handles_missing() -> None:
     assert image_file("static/demo/not_exist.jpg") is None
 
 
+@requires_demo_images
 def test_generate_with_demo_library() -> None:
     payload = generate(
         SCENARIOS["slender_cool"],

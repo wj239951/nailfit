@@ -58,7 +58,8 @@ st.set_page_config(page_title="NailFit · 手型美甲推荐", page_icon="💅",
 
 CUSTOM_PRESET = "自定义"
 LIBRARIES = library_choices()
-UPLOAD_DIR = ROOT / "static" / "preview" / "_uploads"
+# 用户上传的手照存私密目录：不在 static/ 下，不会被 API 的 /static 公开服务
+UPLOAD_DIR = ROOT / "data" / "uploads"
 MODE_MANUAL = "手动选择特征"
 MODE_VISION = "手照识别"
 QUALITY_TEXT = {

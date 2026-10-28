@@ -231,7 +231,7 @@ def test_vision_error_is_naiffit_error():
 # --------------------------------------------------------------------------- M12 量测回归
 def test_width_at_point_sums_both_directions():
     """宽度要两侧分别走，不能只取一侧最大（M12 修掉的饱和 bug）。"""
-    import numpy as np
+    np = pytest.importorskip("numpy")
 
     mask = np.zeros((60, 100), dtype=np.uint8)
     mask[20:41, 5:95] = 255  # 21px 高的一条带
@@ -239,7 +239,7 @@ def test_width_at_point_sums_both_directions():
 
 
 def test_width_at_point_snaps_to_nearest_foreground():
-    import numpy as np
+    np = pytest.importorskip("numpy")
 
     mask = np.zeros((60, 100), dtype=np.uint8)
     mask[20:41, 5:95] = 255
@@ -248,7 +248,7 @@ def test_width_at_point_snaps_to_nearest_foreground():
 
 
 def test_width_at_point_stops_at_mask_boundary():
-    import numpy as np
+    np = pytest.importorskip("numpy")
 
     mask = np.zeros((60, 100), dtype=np.uint8)
     mask[20:41, 5:45] = 255  # 半宽 20
@@ -256,7 +256,7 @@ def test_width_at_point_stops_at_mask_boundary():
 
 
 def test_width_at_point_returns_zero_outside_mask():
-    import numpy as np
+    np = pytest.importorskip("numpy")
 
     mask = np.zeros((60, 100), dtype=np.uint8)
     assert _width_at_point(np, mask, (50.0, 30.0), (1.0, 0.0)) == 0.0

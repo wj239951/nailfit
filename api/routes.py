@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
+import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -37,6 +38,29 @@ router = APIRouter(prefix="/api", tags=["nailfit"])
 
 # 上传图片大小上限：12MB（手机原图一般 2–6MB）
 MAX_UPLOAD_BYTES = 12 * 1024 * 1024
+
+# 视觉接口允许读取的图片目录白名单：image_path 是客户端传的，
+# 不做限制等于开放「任意服务端文件读取」
+ALLOWED_IMAGE_ROOTS = (
+    ROOT / "static",
+    ROOT / "data" / "uploads",
+    ROOT / "eval",
+)
+
+# 网页上传的手照存这里（不在 static/ 下，避免被 /static 公开服务）
+UPLOAD_DIR = ROOT / "data" / "uploads"
+
+
+def _resolve_image_path(raw: str) -> Path:
+    """把客户端传的 image_path 限制在白名单目录内；越界一律 422，不回显路径细节。"""
+    path = Path(raw)
+    if not path.is_absolute():
+        path = ROOT / path
+    resolved = path.resolve()
+    for allowed in ALLOWED_IMAGE_ROOTS:
+        if resolved.is_relative_to(allowed.resolve()):
+            return resolved
+    raise HTTPException(status_code=422, detail="image_path 不在允许的目录内")
 
 
 @router.get("/health")
@@ -133,7 +157,7 @@ def vision_extract_endpoint(req: VisionExtractRequest) -> dict:
     """手照 → 手部特征（M8/M9）。只是识别，不做推荐。"""
     try:
         features, meta = features_from_image(
-            req.image_path,
+            _resolve_image_path(req.image_path),
             scene=req.scene,
             overrides=req.overrides,
             auto_download=req.auto_download,
@@ -149,7 +173,7 @@ def recommend_from_image_endpoint(req: RecommendFromImageRequest) -> dict:
     try:
         return attach_references(
             recommend_from_image(
-                req.image_path,
+                _resolve_image_path(req.image_path),
                 scene=req.scene,
                 use_llm=req.use_llm,
                 free_text=req.free_text,
@@ -192,7 +216,9 @@ async def vision_upload_endpoint(
     ctype = (request.headers.get("content-type") or "").lower()
     suffix = ".png" if "png" in ctype else ".webp" if "webp" in ctype else ".jpg"
     tmpdir = Path(tempfile.mkdtemp(prefix="nailfit-upload-"))
-    path = tmpdir / f"upload{suffix}"
+    # 文件名带 uuid：预览图按 image.stem 命名，固定 upload.jpg 会让所有用户
+    # 共用同一个 static/preview/vision_upload.jpg，互相覆盖 + 跨用户泄露
+    path = tmpdir / f"upload_{uuid.uuid4().hex}{suffix}"
     try:
         path.write_bytes(data)
         features, meta = features_from_image(

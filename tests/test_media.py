@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from conftest import requires_demo_images
 from core.media import (
     LICENSES,
     LocalProvider,
@@ -96,12 +97,14 @@ def test_demo_library_is_schema_v2():
         assert str(media.get("image") or "").startswith("static/"), style.get("id")
 
 
+@requires_demo_images
 def test_demo_library_still_passes_schema_validation():
     styles = load_styles_json(DEMO)
     assert validate_styles(styles, load_taxonomy()) == []
     assert check_images(styles, ROOT) == []
 
 
+@requires_demo_images
 def test_validate_media_demo_library_is_clean():
     errors, stats = validate_media_styles(load_styles_json(DEMO), check_images=True)
     assert errors == []
@@ -194,6 +197,7 @@ def test_media_caption_variants():
     )
 
 
+@requires_demo_images
 def test_media_image_path_only_accepts_existing_static_files():
     assert media_image_path({"image": LOCAL_IMAGE}) == (ROOT / LOCAL_IMAGE).resolve()
     assert media_image_path({"image": "cache/refs/x.jpg"}) is None
@@ -203,6 +207,7 @@ def test_media_image_path_only_accepts_existing_static_files():
 # ---------------------------------------------------------------- Provider
 
 
+@requires_demo_images
 def test_local_provider_resolves_existing_image():
     provider = LocalProvider(ROOT)
     media = provider.resolve({"id": "d001", "media": {"image": LOCAL_IMAGE, "license": "demo"}})
@@ -297,6 +302,7 @@ def test_search_provider_skips_low_authority_results(tmp_path):
 # ---------------------------------------------------------------- Resolver
 
 
+@requires_demo_images
 def test_resolver_caches_local_media(tmp_path):
     cache = tmp_path / "media_cache.json"
     resolver = MediaResolver(cache_path=cache)
@@ -336,6 +342,7 @@ def test_resolver_degrades_when_provider_raises(tmp_path):
     assert "媒体解析失败" in (media["note"] or "")
 
 
+@requires_demo_images
 def test_resolve_card_media_is_read_only(tmp_path):
     styles_by_id = {
         "d001": {"id": "d001", "media": {"image": LOCAL_IMAGE, "license": "demo"}},
@@ -351,6 +358,7 @@ def test_resolve_card_media_is_read_only(tmp_path):
 # ---------------------------------------------------------------- 展示链路
 
 
+@requires_demo_images
 def test_pipeline_attaches_media_to_cards():
     payload = generate(
         SCENARIOS["slender_cool"], use_llm=False, styles_path="data/styles.demo.json"
@@ -362,6 +370,7 @@ def test_pipeline_attaches_media_to_cards():
         assert media.get("image"), f"卡片缺少参考图：{card['style_id']}"
 
 
+@requires_demo_images
 def test_card_view_exposes_media_fields():
     payload = generate(
         SCENARIOS["slender_cool"], use_llm=False, styles_path="data/styles.demo.json"
@@ -374,6 +383,7 @@ def test_card_view_exposes_media_fields():
 # ---------------------------------------------------------------- 预取脚本
 
 
+@requires_demo_images
 def test_prefetch_local_writes_cache(tmp_path):
     styles_path = tmp_path / "styles.json"
     cache = tmp_path / "media_cache.json"

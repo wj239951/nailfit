@@ -40,6 +40,9 @@ static/demo/
 static/styles/_preview/
 static/preview/
 
+# 用户上传的手照（私密数据，永远不进仓库）
+data/uploads/
+
 # MediaPipe 模型（约 8MB，用 scripts/vision_demo.py --download-model 下载）
 models/
 
